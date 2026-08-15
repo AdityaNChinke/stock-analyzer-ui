@@ -385,6 +385,8 @@ export const calculateTechnicalIndicators = (prices) => {
     trailingStopRule: `Once price reaches ₹${breakevenTriggerPrice.toFixed(2)} (+4.5%), move your Stop Loss up to Entry Price (₹${latestClose.toFixed(2)}) to lock in a risk-free trade.`,
     timeStopRule: `Exit trade at market price if neither Target nor Stop is hit within ${holdingDaysMax} trading days.`,
     overboughtExit: `Take partial profit if RSI climbs above 72 on daily timeframe.`,
+  };
+
   // Build comprehensive daily candle history for Recharts Line & Bar charts
   const history = prices.map((p, i) => {
     const rawDate = p.tradeDate || p.date || new Date(Date.now() - (n - 1 - i) * 86400000).toISOString().split('T')[0];
