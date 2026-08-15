@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Grid,
@@ -14,6 +15,7 @@ import {
   Star as StarIcon,
   WorkspacePremium as MedalIcon,
   Timer as TimerIcon,
+  AccountBalanceWallet as WalletIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useRecommendations } from '../hooks/useRecommendations';
@@ -23,11 +25,14 @@ import StatusChip from '../components/common/StatusChip';
 import ConfidenceGauge from '../components/common/ConfidenceGauge';
 import LoadingComponent from '../components/common/LoadingComponent';
 import ErrorComponent from '../components/common/ErrorComponent';
+import TradeModal from '../components/portfolio/TradeModal';
 import { formatCurrency } from '../utils/formatters';
 import { ROUTES } from '../utils/constants';
 
 export const TodayRecommendationsPage = () => {
   const navigate = useNavigate();
+  const [tradeModalStock, setTradeModalStock] = useState(null);
+
   const {
     recommendations,
     loading,
@@ -41,7 +46,7 @@ export const TodayRecommendationsPage = () => {
     <Box>
       <PageHeader
         title="Top 5 Swing Trading Setups (Today)"
-        subtitle="High-probability swing trade setups with exact Holding Time and When to Sell rules."
+        subtitle="High-probability swing trade setups with exact Holding Time, Target & Stop levels."
         breadcrumbs={[
           { label: 'Dashboard', path: ROUTES.DASHBOARD },
           { label: 'Recommendations', path: ROUTES.RECOMMENDATIONS },
@@ -49,6 +54,17 @@ export const TodayRecommendationsPage = () => {
         ]}
         onRefresh={refetch}
         refreshing={loading}
+        actions={
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<WalletIcon sx={{ color: 'primary.main' }} />}
+            onClick={() => navigate(ROUTES.PORTFOLIO)}
+            sx={{ fontWeight: 700, textTransform: 'none', borderColor: 'divider' }}
+          >
+            Open Virtual Portfolio (₹1L)
+          </Button>
+        }
       />
 
       {loading && !recommendations.length ? (
@@ -198,10 +214,16 @@ export const TodayRecommendationsPage = () => {
 
                     <Divider />
 
-                    <CardActions sx={{ p: 2, justifyContent: 'space-between' }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                        R:R Ratio: <strong style={{ color: '#10b981' }}>{rec.riskRewardRatio || '2.22:1'}</strong>
-                      </Typography>
+                    <CardActions sx={{ p: 2, display: 'flex', gap: 1, justifyContent: 'space-between' }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<WalletIcon sx={{ color: 'primary.main' }} />}
+                        onClick={() => setTradeModalStock(rec)}
+                        sx={{ textTransform: 'none', fontWeight: 700, borderColor: 'divider' }}
+                      >
+                        Simulate Buy
+                      </Button>
                       <Button
                         size="small"
                         variant="contained"
@@ -224,6 +246,19 @@ export const TodayRecommendationsPage = () => {
             recommendations={recommendations}
             showPagination={false}
           />
+
+          {/* Trade Buy Modal */}
+          {tradeModalStock && (
+            <TradeModal
+              open={Boolean(tradeModalStock)}
+              onClose={() => setTradeModalStock(null)}
+              stock={tradeModalStock}
+              onTradeSuccess={() => {
+                setTradeModalStock(null);
+                navigate(ROUTES.PORTFOLIO);
+              }}
+            />
+          )}
         </>
       )}
     </Box>
