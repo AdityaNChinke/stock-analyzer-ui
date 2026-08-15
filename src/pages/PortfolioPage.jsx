@@ -97,26 +97,30 @@ export const PortfolioPage = () => {
         refreshing={loading}
         actions={
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<ResetIcon />}
-              onClick={handleReset}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Reset to ₹1L
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              startIcon={<TrendingUpIcon />}
-              onClick={() => navigate(ROUTES.TODAY_RECOMMENDATIONS)}
-              sx={{ textTransform: 'none', fontWeight: 700 }}
-            >
-              Find New Setups
-            </Button>
+            <Tooltip title="Reset your paper trading balance back to the starting amount of ₹1,00,000 cash" arrow>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<ResetIcon />}
+                onClick={handleReset}
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                Reset to ₹1L
+              </Button>
+            </Tooltip>
+            <Tooltip title="View today's top 5 highest-probability swing trading trade setups" arrow>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<TrendingUpIcon />}
+                onClick={() => navigate(ROUTES.TODAY_RECOMMENDATIONS)}
+                sx={{ textTransform: 'none', fontWeight: 700 }}
+              >
+                Find New Setups
+              </Button>
+            </Tooltip>
           </Box>
         }
       />
@@ -132,6 +136,7 @@ export const PortfolioPage = () => {
             accentColor="#3b82f6"
             badgeText={summary.totalPortfolioValue >= 100000 ? '+PROFIT' : '-DRAWDOWN'}
             badgeType={summary.totalPortfolioValue >= 100000 ? 'positive' : 'negative'}
+            tooltip="💰 Total Net Worth: Combined value of your available cash plus all open stock holdings at current live market prices."
           />
         </Grid>
 
@@ -144,6 +149,7 @@ export const PortfolioPage = () => {
             accentColor={isPositivePnl ? '#10b981' : '#ef4444'}
             badgeText={isPositivePnl ? 'Green' : 'Red'}
             badgeType={isPositivePnl ? 'positive' : 'negative'}
+            tooltip="📈 Live Unrealized Profit/Loss: Profit or loss on your currently open stocks if you were to sell them at current live prices right now."
           />
         </Grid>
 
@@ -156,6 +162,7 @@ export const PortfolioPage = () => {
             accentColor="#f59e0b"
             badgeText="Liquid"
             badgeType="neutral"
+            tooltip="💵 Liquid Cash: Virtual funds ready to buy new stock positions without risking real money."
           />
         </Grid>
 
@@ -168,6 +175,7 @@ export const PortfolioPage = () => {
             accentColor="#8b5cf6"
             badgeText={`₹${summary.totalRealizedPnl.toFixed(0)} Realized`}
             badgeType={summary.totalRealizedPnl >= 0 ? 'positive' : 'negative'}
+            tooltip="🎯 Historical Win Rate: The percentage of your past closed swing trades that finished in a profit."
           />
         </Grid>
       </Grid>

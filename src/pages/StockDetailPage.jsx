@@ -42,7 +42,8 @@ export const StockDetailPage = () => {
   const displaySymbol = (symbol || 'UNKNOWN').toUpperCase();
   const companyName = stockInfo?.companyName || indicators?.companyName || `${displaySymbol} Corporation`;
   const sector = stockInfo?.sector || indicators?.sector || 'Equities';
-  const currentPrice = indicators?.currentPrice || stockInfo?.price || (prices.length ? prices[prices.length - 1].close : 0);
+  const safePrices = Array.isArray(prices) ? prices : [];
+  const currentPrice = indicators?.currentPrice || stockInfo?.price || (safePrices.length ? safePrices[safePrices.length - 1].close : 0);
 
   const atrVal = indicators?.atr || Number((currentPrice * 0.022).toFixed(2));
   const sma200Val = indicators?.sma200 || Number((currentPrice * 0.93).toFixed(2));
@@ -136,25 +137,29 @@ export const StockDetailPage = () => {
             >
               Back to List
             </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<TelegramIcon sx={{ color: '#229ED9' }} />}
-              onClick={handleSendTelegram}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              {alertStatus || 'Telegram Alert'}
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              startIcon={<WalletIcon />}
-              onClick={() => setTradeModalOpen(true)}
-              sx={{ fontWeight: 700, textTransform: 'none' }}
-            >
-              Simulate Buy (₹1L)
-            </Button>
+            <Tooltip title="Send complete entry, target, and stop-loss alert to your Telegram phone" arrow>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<TelegramIcon sx={{ color: '#229ED9' }} />}
+                onClick={handleSendTelegram}
+                sx={{ textTransform: 'none', fontWeight: 600 }}
+              >
+                {alertStatus || 'Telegram Alert'}
+              </Button>
+            </Tooltip>
+            <Tooltip title="Test buying this stock in your ₹1,00,000 virtual paper trading account" arrow>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<WalletIcon />}
+                onClick={() => setTradeModalOpen(true)}
+                sx={{ fontWeight: 700, textTransform: 'none' }}
+              >
+                Simulate Buy (₹1L)
+              </Button>
+            </Tooltip>
           </Box>
         }
       />
@@ -177,7 +182,11 @@ export const StockDetailPage = () => {
                   >
                     {displaySymbol}
                   </Typography>
-                  <StatusChip status={overallSignal} size="medium" />
+                  <Tooltip title={`Algorithmic Signal: ${overallSignal}`} arrow>
+                    <span>
+                      <StatusChip status={overallSignal} size="medium" />
+                    </span>
+                  </Tooltip>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   {companyName} • {sector}
@@ -191,16 +200,18 @@ export const StockDetailPage = () => {
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                 CURRENT PRICE (LIVE NSE)
               </Typography>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 800,
-                  fontFamily: 'JetBrains Mono, monospace',
-                  color: 'text.primary',
-                }}
-              >
-                {formatCurrency(currentPrice)}
-              </Typography>
+              <Tooltip title="Real-time quote from the National Stock Exchange (NSE)" arrow>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 800,
+                    fontFamily: 'JetBrains Mono, monospace',
+                    color: 'text.primary',
+                  }}
+                >
+                  {formatCurrency(currentPrice)}
+                </Typography>
+              </Tooltip>
             </Box>
           </Grid>
 
@@ -217,29 +228,33 @@ export const StockDetailPage = () => {
                 borderColor: 'divider',
               }}
             >
-              <Box sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <VolatilityIcon sx={{ fontSize: 14, color: 'primary.main' }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    ATR (14) VOLATILITY
+              <Tooltip title="📊 ATR (Average True Range): Shows how many Rupees this stock typically moves per day. Used to place stop-losses outside random daily market noise." arrow>
+                <Box sx={{ flexGrow: 1, cursor: 'help' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <VolatilityIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                      ATR (14) VOLATILITY
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
+                    ₹{atrVal} (1.5x SL Buffer)
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
-                  ₹{atrVal} (1.5x SL Buffer)
-                </Typography>
-              </Box>
+              </Tooltip>
               <Divider orientation="vertical" flexItem />
-              <Box sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <TrendIcon sx={{ fontSize: 14, color: isAbove200 ? 'success.main' : 'error.main' }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    200-SMA BASELINE
+              <Tooltip title="📈 200-Day Moving Average: Major long-term trend line. Stocks trading above this are in strong macro bull markets." arrow>
+                <Box sx={{ flexGrow: 1, cursor: 'help' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <TrendIcon sx={{ fontSize: 14, color: isAbove200 ? 'success.main' : 'error.main' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                      200-SMA BASELINE
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace', color: isAbove200 ? 'success.main' : 'error.main' }}>
+                    {formatCurrency(sma200Val)} {isAbove200 ? '🟢 BULL' : '🔴 BEAR'}
                   </Typography>
                 </Box>
-                <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace', color: isAbove200 ? 'success.main' : 'error.main' }}>
-                  {formatCurrency(sma200Val)} {isAbove200 ? '🟢 BULL' : '🔴 BEAR'}
-                </Typography>
-              </Box>
+              </Tooltip>
             </Box>
           </Grid>
         </Grid>

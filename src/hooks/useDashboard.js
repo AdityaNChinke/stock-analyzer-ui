@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDashboardSummary } from '../services/dashboardService';
-import { MOCK_DASHBOARD_SUMMARY } from '../services/mockData';
 
 export const useDashboard = () => {
-  const [data, setData] = useState(MOCK_DASHBOARD_SUMMARY);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchSummary = useCallback(async () => {

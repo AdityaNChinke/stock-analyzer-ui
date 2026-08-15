@@ -15,17 +15,24 @@ export const MainLayout = ({ mode, onToggleTheme }) => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar Navigation */}
-      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      {/* Sidebar Navigation with Fixed Reserved Width */}
+      <Box
+        component="nav"
+        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+      >
+        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      </Box>
 
       {/* Main Content Area */}
       <Box
+        component="main"
         sx={{
           flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          overflowX: 'hidden',
         }}
       >
         {/* Top Navbar */}
@@ -41,7 +48,7 @@ export const MainLayout = ({ mode, onToggleTheme }) => {
           sx={{
             flexGrow: 1,
             py: { xs: 2.5, sm: 3.5 },
-            px: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 3.5 },
           }}
         >
           <Outlet />

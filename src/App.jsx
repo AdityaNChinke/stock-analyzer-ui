@@ -12,19 +12,54 @@ import TodayRecommendationsPage from './pages/TodayRecommendationsPage';
 import PortfolioPage from './pages/PortfolioPage';
 import PerformancePage from './pages/PerformancePage';
 import NotFoundPage from './pages/NotFoundPage';
+import VoiceLoginPage from './pages/VoiceLoginPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ROUTES } from './utils/constants';
 
+function AppContent({ mode, toggleTheme }) {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Routes>
+      {!isAuthenticated ? (
+        <Route path="*" element={<VoiceLoginPage />} />
+      ) : (
+        <Route
+          element={<MainLayout mode={mode} onToggleTheme={toggleTheme} />}
+        >
+          <Route index element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+          <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+          <Route path={ROUTES.STOCKS} element={<StockListPage />} />
+          <Route path={ROUTES.STOCK_DETAIL} element={<StockDetailPage />} />
+          <Route path={ROUTES.RECOMMENDATIONS} element={<RecommendationPage />} />
+          <Route path={ROUTES.TODAY_RECOMMENDATIONS} element={<TodayRecommendationsPage />} />
+          <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
+          <Route path={ROUTES.PERFORMANCE} element={<PerformancePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      )}
+    </Routes>
+  );
+}
+
 function App() {
-  // Theme mode stored in localStorage, defaulting to 'dark'
   const [mode, setMode] = useState(() => {
-    const savedMode = localStorage.getItem('stock_analyzer_theme');
-    return savedMode ? savedMode : 'dark';
+    try {
+      const savedMode = localStorage.getItem('stock_analyzer_theme');
+      return savedMode ? savedMode : 'dark';
+    } catch {
+      return 'dark';
+    }
   });
 
   const toggleTheme = () => {
     setMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('stock_analyzer_theme', next);
+      try {
+        localStorage.setItem('stock_analyzer_theme', next);
+      } catch {
+        // Ignore
+      }
       return next;
     });
   };
@@ -36,21 +71,9 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <Routes>
-            <Route
-              element={<MainLayout mode={mode} onToggleTheme={toggleTheme} />}
-            >
-              <Route index element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-              <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-              <Route path={ROUTES.STOCKS} element={<StockListPage />} />
-              <Route path={ROUTES.STOCK_DETAIL} element={<StockDetailPage />} />
-              <Route path={ROUTES.RECOMMENDATIONS} element={<RecommendationPage />} />
-              <Route path={ROUTES.TODAY_RECOMMENDATIONS} element={<TodayRecommendationsPage />} />
-              <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
-              <Route path={ROUTES.PERFORMANCE} element={<PerformancePage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
-          </Routes>
+          <AuthProvider>
+            <AppContent mode={mode} toggleTheme={toggleTheme} />
+          </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
     </ErrorBoundary>

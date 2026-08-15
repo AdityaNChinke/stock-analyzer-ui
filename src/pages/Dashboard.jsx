@@ -9,6 +9,7 @@ import {
   CardContent,
   Chip,
   LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   ShowChart as StocksIcon,
@@ -133,6 +134,7 @@ export const Dashboard = () => {
             accentColor="#3b82f6"
             badgeText="Live Feeds"
             badgeType="neutral"
+            tooltip="📊 50 Major NSE Equities: Real-time price tracking for India's top companies (Reliance, Trent, TCS, Zomato, etc.). Tap to view full list."
             onClick={() => navigate(ROUTES.STOCKS)}
           />
         </Grid>
@@ -147,6 +149,7 @@ export const Dashboard = () => {
             accentColor="#10b981"
             badgeText="Bullish Bias"
             badgeType="positive"
+            tooltip="🟢 Active Buy Signals: Stocks in strong upward trends with high-probability breakout or bounce setups. Tap to view."
             onClick={() => navigate(ROUTES.RECOMMENDATIONS)}
           />
         </Grid>
@@ -161,6 +164,7 @@ export const Dashboard = () => {
             accentColor="#ef4444"
             badgeText="Bearish Risk"
             badgeType="negative"
+            tooltip="🔴 Risk & Exit Signals: Stocks reaching peak profit targets or showing downside risk. Tap to review."
             onClick={() => navigate(ROUTES.RECOMMENDATIONS)}
           />
         </Grid>
@@ -175,56 +179,60 @@ export const Dashboard = () => {
             accentColor="#f59e0b"
             badgeText="Monitor"
             badgeType="neutral"
+            tooltip="🟡 Consolidation Watchlist: Rangebound stocks moving sideways. Wait for a breakout before entering."
             onClick={() => navigate(ROUTES.RECOMMENDATIONS)}
           />
         </Grid>
       </Grid>
 
       {/* 🧠 ADAPTIVE AI SELF-LEARNING STATUS BANNER */}
-      <Paper
-        sx={{
-          p: 2.5,
-          mb: 3.5,
-          borderRadius: 3,
-          bgcolor: 'background.paper',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(59, 130, 246, 0.12)', color: 'primary.main' }}>
-            <SentimentIcon sx={{ fontSize: 24 }} />
-          </Box>
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                🧠 Day-by-Day Adaptive Strategy Calibration
-              </Typography>
-              <Chip
-                label="79.2% Accuracy Calibration"
-                size="small"
-                sx={{ fontWeight: 800, fontSize: '0.7rem', bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}
-              />
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              Analyzed 184+ daily NSE sessions • EMA20 Pullback setups boosted to 1.25x (81.2% historical win rate)
-            </Typography>
-          </Box>
-        </Box>
-
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={() => navigate(ROUTES.PERFORMANCE)}
-          sx={{ fontWeight: 700, textTransform: 'none', borderColor: 'divider' }}
+      <Tooltip title="🧠 Continuous Bayesian Learning: The algorithm automatically calibrates its win-rates after every trading session to get smarter and more accurate each day." arrow>
+        <Paper
+          sx={{
+            p: 2.5,
+            mb: 3.5,
+            borderRadius: 3,
+            bgcolor: 'background.paper',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2,
+            cursor: 'help',
+          }}
         >
-          View Learning Audit
-        </Button>
-      </Paper>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(59, 130, 246, 0.12)', color: 'primary.main' }}>
+              <SentimentIcon sx={{ fontSize: 24 }} />
+            </Box>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                  🧠 Day-by-Day Adaptive Strategy Calibration
+                </Typography>
+                <Chip
+                  label="79.2% Accuracy Calibration"
+                  size="small"
+                  sx={{ fontWeight: 800, fontSize: '0.7rem', bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}
+                />
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                Analyzed 184+ daily NSE sessions • EMA20 Pullback setups boosted to 1.25x (81.2% historical win rate)
+              </Typography>
+            </Box>
+          </Box>
+
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => navigate(ROUTES.PERFORMANCE)}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
+          >
+            Explore AI Matrix
+          </Button>
+        </Paper>
+      </Tooltip>
 
       {/* 🔥 FEATURED SECTION: TOP 5 BEST STOCKS FOR SWING TRADING */}
       <Paper
@@ -558,7 +566,7 @@ export const Dashboard = () => {
                 Sector Concentration
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {sectorAllocation.slice(0, 3).map((sec) => (
+                {(Array.isArray(sectorAllocation) ? sectorAllocation : []).slice(0, 3).map((sec) => (
                   <Box key={sec.name} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="caption" sx={{ fontWeight: 500 }}>
                       {sec.name}

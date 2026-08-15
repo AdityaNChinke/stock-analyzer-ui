@@ -233,3 +233,6 @@ export const computePortfolioSummary = (portfolio, livePricesMap = {}) => {
     tradeHistory: portfolio.tradeHistory || [],
   };
 };
+
+export const getPaperTradingAccount = getPortfolio;
+

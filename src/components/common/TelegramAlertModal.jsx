@@ -14,21 +14,31 @@ import {
   FormControlLabel,
   Link,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Telegram as TelegramIcon,
   Send as SendIcon,
   CheckCircle as CheckIcon,
+  OpenInNew as OpenInNewIcon,
+  SmartToy as BotIcon,
 } from '@mui/icons-material';
-import { getTelegramConfig, saveTelegramConfig, sendTelegramMessage } from '../../services/telegramService';
+import {
+  getTelegramConfig,
+  saveTelegramConfig,
+  sendTelegramMessage,
+  verifyTelegramBot,
+} from '../../services/telegramService';
 
 export const TelegramAlertModal = ({ open, onClose }) => {
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
   const [isEnabled, setIsEnabled] = useState(false);
+  const [botInfo, setBotInfo] = useState(null);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [testing, setTesting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -37,8 +47,34 @@ export const TelegramAlertModal = ({ open, onClose }) => {
       setChatId(cfg.chatId || '');
       setIsEnabled(cfg.isEnabled || false);
       setStatusMsg({ type: '', text: '' });
+      if (cfg.botToken) {
+        checkBot(cfg.botToken);
+      }
     }
   }, [open]);
+
+  const checkBot = async (token) => {
+    if (!token || token.length < 15) return;
+    setVerifying(true);
+    try {
+      const info = await verifyTelegramBot(token);
+      setBotInfo(info);
+    } catch {
+      setBotInfo(null);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleTokenChange = (e) => {
+    const val = e.target.value;
+    setBotToken(val);
+    if (val.includes(':') && val.length > 20) {
+      checkBot(val.trim());
+    } else {
+      setBotInfo(null);
+    }
+  };
 
   const handleSave = () => {
     saveTelegramConfig({ botToken: botToken.trim(), chatId: chatId.trim(), isEnabled });
@@ -55,13 +91,13 @@ export const TelegramAlertModal = ({ open, onClose }) => {
     setTesting(true);
     setStatusMsg({ type: '', text: '' });
     try {
-      const testMsg = `🚀 <b>StockAnalyzer Alert Test</b>\n\n✅ Your phone alerts are successfully connected! You will now receive high-probability Indian swing trade setups in real time.`;
+      const testMsg = `🚀 <b>StockAnalyzer Pro Alert Test</b>\n\n✅ <b>Connected Successfully!</b>\nYour phone alerts are now active. You will receive 2FA login codes and top Indian swing trade setups in real time.`;
       await sendTelegramMessage(testMsg, botToken.trim(), chatId.trim());
-      setStatusMsg({ type: 'success', text: '🎉 Test message sent! Check your Telegram app.' });
+      setStatusMsg({ type: 'success', text: '🎉 SUCCESS! Test message sent to your Telegram. Check your phone!' });
       saveTelegramConfig({ botToken: botToken.trim(), chatId: chatId.trim(), isEnabled: true });
       setIsEnabled(true);
     } catch (err) {
-      setStatusMsg({ type: 'error', text: `Failed: ${err.message}` });
+      setStatusMsg({ type: 'error', text: `${err.message}` });
     } finally {
       setTesting(false);
     }
@@ -73,7 +109,7 @@ export const TelegramAlertModal = ({ open, onClose }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <TelegramIcon sx={{ color: '#229ED9', fontSize: 28 }} />
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            Free Telegram Phone Alerts (100% Free)
+            Free Telegram Phone Alerts Setup
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small">
@@ -83,76 +119,114 @@ export const TelegramAlertModal = ({ open, onClose }) => {
 
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, lineHeight: 1.6 }}>
-          Receive instant swing trade alerts and target hits directly on your phone via Telegram Bot API with <strong>zero cost forever</strong>.
+          Receive instant swing trade signals and 2FA login codes directly on your Telegram phone app with <strong>100% zero fees forever</strong>.
         </Typography>
 
         {statusMsg.text ? (
-          <Alert severity={statusMsg.type} sx={{ mb: 2 }}>
+          <Alert severity={statusMsg.type} sx={{ mb: 2.5, borderRadius: 2 }}>
             {statusMsg.text}
           </Alert>
         ) : null}
 
-        <Box sx={{ p: 2, mb: 2.5, bgcolor: 'background.subtle', borderRadius: 2 }}>
-          <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 1 }}>
-            📖 Quick 3-Step Setup (Takes 30 seconds):
-          </Typography>
-          <Typography variant="caption" color="text.secondary" component="div" sx={{ lineHeight: 1.7 }}>
-            1. Open Telegram and message <strong>@BotFather</strong> to create your free bot (you will get a <code>Bot Token</code>).<br />
-            2. Message <strong>@userinfobot</strong> on Telegram to see your numeric <code>Chat ID</code>.<br />
-            3. Paste both below and click <strong>"Send Test Alert"</strong>!
-          </Typography>
+        {/* Step 1: Token */}
+        <Box sx={{ mb: 2.5 }}>
+          <TextField
+            fullWidth
+            label="1. Telegram Bot Token (from @BotFather)"
+            placeholder="e.g. 7849201938:AAFdE8_xyz982K..."
+            size="small"
+            value={botToken}
+            onChange={handleTokenChange}
+            sx={{ mb: 1 }}
+          />
+
+          {/* Live Bot Recognition Chip & Start Button */}
+          {botInfo && (
+            <Box sx={{ p: 1.5, bgcolor: 'rgba(34, 158, 217, 0.1)', border: '1px solid rgba(34, 158, 217, 0.3)', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BotIcon sx={{ color: '#229ED9' }} />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                    {botInfo.first_name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    @{botInfo.username}
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                endIcon={<OpenInNewIcon />}
+                href={`https://t.me/${botInfo.username}`}
+                target="_blank"
+                sx={{ bgcolor: '#229ED9', '&:hover': { bgcolor: '#1c87ba' }, textTransform: 'none', fontWeight: 700 }}
+              >
+                Open Bot & Tap START
+              </Button>
+            </Box>
+          )}
         </Box>
 
-        <TextField
-          fullWidth
-          label="Telegram Bot Token"
-          placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-          size="small"
-          value={botToken}
-          onChange={(e) => setBotToken(e.target.value)}
-          sx={{ mb: 2 }}
-        />
+        {/* Step 2: Chat ID */}
+        <Box sx={{ mb: 2.5 }}>
+          <TextField
+            fullWidth
+            label="2. Your Telegram Numeric Chat ID (from @userinfobot)"
+            placeholder="e.g. 987654321 (Numbers only)"
+            size="small"
+            value={chatId}
+            onChange={(e) => setChatId(e.target.value.trim())}
+            helperText="Message @userinfobot on Telegram to get your numeric ID."
+            sx={{ mb: 1 }}
+          />
+        </Box>
 
-        <TextField
+        {/* Test Alert Button */}
+        <Button
           fullWidth
-          label="Your Telegram Chat ID"
-          placeholder="e.g. 987654321"
-          size="small"
-          value={chatId}
-          onChange={(e) => setChatId(e.target.value)}
-          sx={{ mb: 2 }}
-        />
+          variant="contained"
+          startIcon={testing ? <CircularProgress size={18} color="inherit" /> : <SendIcon />}
+          onClick={handleSendTest}
+          disabled={testing || !botToken || !chatId}
+          sx={{
+            py: 1.2,
+            bgcolor: '#229ED9',
+            '&:hover': { bgcolor: '#1c87ba' },
+            fontWeight: 800,
+            textTransform: 'none',
+            borderRadius: 2,
+            mb: 2,
+          }}
+        >
+          {testing ? 'Sending Test Message...' : 'Send Live Test Message to My Phone'}
+        </Button>
 
-        <FormControlLabel
-          control={<Switch checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} color="primary" />}
-          label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Enable Real-time Swing Alerts</Typography>}
-        />
+        {/* Instructions Guide */}
+        <Box sx={{ p: 2, bgcolor: 'background.subtle', borderRadius: 2 }}>
+          <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>
+            ⚠️ CRITICAL: Why messages might fail:
+          </Typography>
+          <Typography variant="caption" color="text.secondary" component="div" sx={{ lineHeight: 1.6 }}>
+            Telegram has a strict rule: <strong>You must open your bot in Telegram and tap START</strong> once. Bots cannot send messages to anyone who hasn't clicked START!
+          </Typography>
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-        <Button
-          variant="outlined"
-          color="info"
-          startIcon={testing ? <CircularProgress size={16} /> : <SendIcon />}
-          onClick={handleSendTest}
-          disabled={testing}
-          sx={{ textTransform: 'none', fontWeight: 700 }}
-        >
-          Send Test Alert
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={onClose} color="inherit" sx={{ textTransform: 'none' }}>
+          Cancel
         </Button>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button onClick={onClose} color="inherit" sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSave}
-            sx={{ fontWeight: 700, textTransform: 'none', px: 3 }}
-          >
-            Save Settings
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<CheckIcon />}
+          onClick={handleSave}
+          disabled={!botToken || !chatId}
+          sx={{ fontWeight: 700, textTransform: 'none' }}
+        >
+          Save & Enable Phone Alerts
+        </Button>
       </DialogActions>
     </Dialog>
   );

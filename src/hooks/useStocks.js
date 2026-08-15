@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getStocks } from '../services/stockService';
-import { MOCK_STOCKS } from '../services/mockData';
 
 export const useStocks = () => {
-  const [stocks, setStocks] = useState(MOCK_STOCKS);
-  const [loading, setLoading] = useState(false);
+  const [stocks, setStocks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState('ALL');
@@ -13,7 +12,7 @@ export const useStocks = () => {
     setError(null);
     try {
       const result = await getStocks();
-      if (Array.isArray(result) && result.length > 0) {
+      if (Array.isArray(result)) {
         setStocks(result);
       }
     } catch (err) {
@@ -39,20 +38,27 @@ export const useStocks = () => {
   // Filter stocks by search query and sector
   const filteredStocks = useMemo(() => {
     return stocks.filter((stock) => {
-      const matchSearch =
-        !searchQuery ||
-        (stock.symbol && stock.symbol.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (stock.companyName && stock.companyName.toLowerCase().includes(searchQuery.toLowerCase()));
+      // Sector filter
+      if (selectedSector !== 'ALL' && stock.sector !== selectedSector) {
+        return false;
+      }
 
-      const matchSector = selectedSector === 'ALL' || stock.sector === selectedSector;
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const symbolMatch = stock.symbol?.toLowerCase().includes(query);
+        const nameMatch = stock.companyName?.toLowerCase().includes(query);
+        return symbolMatch || nameMatch;
+      }
 
-      return matchSearch && matchSector;
+      return true;
     });
-  }, [stocks, searchQuery, selectedSector]);
+  }, [stocks, selectedSector, searchQuery]);
 
   return {
-    stocks,
+    stocks: filteredStocks,
     filteredStocks,
+    allStocks: stocks,
     sectors,
     loading,
     error,
@@ -63,3 +69,5 @@ export const useStocks = () => {
     refetch: fetchStocksList,
   };
 };
+
+export default useStocks;

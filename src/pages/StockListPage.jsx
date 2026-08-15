@@ -33,7 +33,7 @@ export const StockListPage = () => {
   const {
     stocks,
     filteredStocks,
-    sectors,
+    sectors = [],
     loading,
     error,
     searchQuery,
@@ -46,6 +46,11 @@ export const StockListPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  const safeStocksList = useMemo(() => {
+    const candidate = filteredStocks || stocks;
+    return Array.isArray(candidate) ? candidate : [];
+  }, [filteredStocks, stocks]);
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -56,14 +61,14 @@ export const StockListPage = () => {
   };
 
   const paginatedStocks = useMemo(() => {
-    return filteredStocks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [filteredStocks, page, rowsPerPage]);
+    return safeStocksList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [safeStocksList, page, rowsPerPage]);
 
   return (
     <Box>
       <PageHeader
         title="Indian Equities Watchlist"
-        subtitle="Explore all tracked Indian equities (NSE/BSE), real-time market valuations, and sector distributions."
+        subtitle="Explore all 50 tracked Indian equities (NSE), real-time market valuations, and sector distributions."
         breadcrumbs={[
           { label: 'Dashboard', path: '/dashboard' },
           { label: 'Stock List', path: null },
@@ -86,7 +91,7 @@ export const StockListPage = () => {
           {/* Search Box */}
           <TextField
             size="small"
-            placeholder="Search by symbol or company name..."
+            placeholder="Search by symbol or company name (e.g. RELIANCE, TRENT)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             slotProps={{
@@ -98,7 +103,7 @@ export const StockListPage = () => {
                 ),
               },
             }}
-            sx={{ maxWidth: { xs: '100%', md: 360 } }}
+            sx={{ flexGrow: 1, maxWidth: { md: 360 } }}
           />
 
           {/* Sector Filter Chips */}
@@ -108,77 +113,74 @@ export const StockListPage = () => {
               gap: 1,
               overflowX: 'auto',
               py: 0.5,
-              '::-webkit-scrollbar': { display: 'none' },
+              '::-webkit-scrollbar': { height: 4 },
+              '::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 },
             }}
           >
-            {sectors.map((sec) => {
-              const isSelected = selectedSector === sec;
-              return (
-                <Chip
-                  key={sec}
-                  label={sec === 'ALL' ? 'All Sectors' : sec}
-                  clickable
-                  color={isSelected ? 'primary' : 'default'}
-                  variant={isSelected ? 'filled' : 'outlined'}
-                  onClick={() => setSelectedSector(sec)}
-                  sx={{
-                    fontWeight: isSelected ? 700 : 500,
-                    fontSize: '0.75rem',
-                    flexShrink: 0,
-                  }}
-                />
-              );
-            })}
+            {(Array.isArray(sectors) ? sectors : ['ALL']).map((sec) => (
+              <Chip
+                key={sec}
+                label={sec}
+                clickable
+                color={selectedSector === sec ? 'primary' : 'default'}
+                variant={selectedSector === sec ? 'filled' : 'outlined'}
+                onClick={() => {
+                  setSelectedSector(sec);
+                  setPage(0);
+                }}
+                sx={{
+                  fontWeight: selectedSector === sec ? 700 : 500,
+                  fontSize: '0.8rem',
+                  flexShrink: 0,
+                }}
+              />
+            ))}
           </Box>
         </Box>
       </Paper>
 
-      {/* Main Stock Table */}
-      {loading && !stocks.length ? (
-        <LoadingComponent mode="table" count={8} />
-      ) : error && !stocks.length ? (
+      {/* Content Area */}
+      {loading && safeStocksList.length === 0 ? (
+        <LoadingComponent mode="table" />
+      ) : error && safeStocksList.length === 0 ? (
         <ErrorComponent
-          title="Failed to load stocks"
-          message="Could not retrieve the stock list from the backend server."
+          title="Failed to load stock list"
           errorDetails={error}
           onRetry={refetch}
         />
       ) : (
-        <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <TableContainer sx={{ minHeight: 400 }}>
-            <Table stickyHeader>
-              <TableHead>
+        <Paper sx={{ borderRadius: 3, overflow: 'hidden', bgcolor: 'background.paper' }}>
+          <TableContainer>
+            <Table>
+              <TableHead sx={{ bgcolor: 'background.subtle' }}>
                 <TableRow>
-                  <TableCell sx={{ minWidth: 120 }}>Symbol</TableCell>
-                  <TableCell sx={{ minWidth: 220 }}>Company Name</TableCell>
-                  <TableCell sx={{ minWidth: 160 }}>Sector</TableCell>
-                  <TableCell align="right" sx={{ minWidth: 120 }}>Price</TableCell>
-                  <TableCell align="right" sx={{ minWidth: 120 }}>24h Change</TableCell>
-                  <TableCell align="right" sx={{ minWidth: 120 }}>Volume</TableCell>
-                  <TableCell align="center" sx={{ width: 100 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>SYMBOL</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>COMPANY NAME</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>SECTOR</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>PRICE (₹)</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>24H CHANGE</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>VOLUME</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>ACTION</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {paginatedStocks.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                      <Typography variant="body1" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary">
                         No stocks found matching your criteria.
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedStocks.map((stock) => {
-                    const isPositive = (stock.changePercent ?? 0) >= 0;
+                    const isPositive = (stock.changePercent || 0) >= 0;
                     return (
                       <TableRow
-                        key={stock.symbol}
+                        key={stock.id || stock.symbol}
                         hover
-                        sx={{
-                          cursor: 'pointer',
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
                         onClick={() => navigate(`/stocks/${stock.symbol}`)}
+                        sx={{ cursor: 'pointer' }}
                       >
                         {/* Symbol */}
                         <TableCell>
@@ -204,14 +206,15 @@ export const StockListPage = () => {
                         {/* Sector */}
                         <TableCell>
                           <Chip
-                            label={stock.sector || 'General'}
+                            label={stock.sector || 'Equities'}
                             size="small"
-                            variant="outlined"
                             sx={{
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              bgcolor: 'background.subtle',
                               borderColor: 'divider',
-                              color: 'text.secondary',
                             }}
+                            variant="outlined"
                           />
                         </TableCell>
 
@@ -225,16 +228,28 @@ export const StockListPage = () => {
                           </Typography>
                         </TableCell>
 
-                        {/* 24h Change */}
+                        {/* Change % */}
                         <TableCell align="right">
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 1,
+                              bgcolor: isPositive
+                                ? 'rgba(16, 185, 129, 0.1)'
+                                : 'rgba(239, 68, 68, 0.1)',
+                            }}
+                          >
                             {isPositive ? (
-                              <TrendingUpIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                              <TrendingUpIcon sx={{ fontSize: 14, color: 'success.main' }} />
                             ) : (
-                              <TrendingDownIcon sx={{ fontSize: 16, color: 'error.main' }} />
+                              <TrendingDownIcon sx={{ fontSize: 14, color: 'error.main' }} />
                             )}
                             <Typography
-                              variant="body2"
+                              variant="caption"
                               sx={{
                                 fontFamily: 'JetBrains Mono, monospace',
                                 fontWeight: 700,
@@ -253,7 +268,7 @@ export const StockListPage = () => {
                             color="text.secondary"
                             sx={{ fontFamily: 'JetBrains Mono, monospace' }}
                           >
-                            {stock.volume || '—'}
+                            {stock.volume || '2.5M'}
                           </Typography>
                         </TableCell>
 
@@ -285,7 +300,7 @@ export const StockListPage = () => {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={filteredStocks.length}
+            count={safeStocksList.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

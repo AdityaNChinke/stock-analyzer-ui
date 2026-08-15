@@ -13,7 +13,7 @@ export const NSE_STOCKS = [
   { symbol: 'COALINDIA', yfSymbol: 'COALINDIA.NS', companyName: 'Coal India Limited', sector: 'Mining & Energy', exchange: 'NSE', basePrice: 428.30 },
 
   // 2. Information Technology (IT)
-  { symbol: 'TCS', yfSymbol: 'TCS.NS', companyName: 'Tata Consultancy Services Ltd.', sector: 'Information Technology', exchange: 'NSE', basePrice: 4221.96 },
+  { symbol: 'TCS', yfSymbol: 'TCS.NS', companyName: 'Tata Consultancy Services Ltd.', sector: 'Information Technology', exchange: 'NSE', basePrice: 2361.00 },
   { symbol: 'INFY', yfSymbol: 'INFY.NS', companyName: 'Infosys Limited', sector: 'Information Technology', exchange: 'NSE', basePrice: 1958.96 },
   { symbol: 'HCLTECH', yfSymbol: 'HCLTECH.NS', companyName: 'HCL Technologies Limited', sector: 'Information Technology', exchange: 'NSE', basePrice: 1785.40 },
   { symbol: 'WIPRO', yfSymbol: 'WIPRO.NS', companyName: 'Wipro Limited', sector: 'Information Technology', exchange: 'NSE', basePrice: 530.20 },
@@ -21,7 +21,7 @@ export const NSE_STOCKS = [
   { symbol: 'LTIM', yfSymbol: 'LTIM.NS', companyName: 'LTIMindtree Limited', sector: 'Information Technology', exchange: 'NSE', basePrice: 5890.00 },
 
   // 3. Banking & Financial Services
-  { symbol: 'HDFCBANK', yfSymbol: 'HDFCBANK.NS', companyName: 'HDFC Bank Limited', sector: 'Banking & Financial Services', exchange: 'NSE', basePrice: 1747.89 },
+  { symbol: 'HDFCBANK', yfSymbol: 'HDFCBANK.NS', companyName: 'HDFC Bank Limited', sector: 'Banking & Financial Services', exchange: 'NSE', basePrice: 727.00 },
   { symbol: 'ICICIBANK', yfSymbol: 'ICICIBANK.NS', companyName: 'ICICI Bank Limited', sector: 'Banking & Financial Services', exchange: 'NSE', basePrice: 1245.30 },
   { symbol: 'SBIN', yfSymbol: 'SBIN.NS', companyName: 'State Bank of India', sector: 'Banking & Financial Services', exchange: 'NSE', basePrice: 845.20 },
   { symbol: 'KOTAKBANK', yfSymbol: 'KOTAKBANK.NS', companyName: 'Kotak Mahindra Bank Limited', sector: 'Banking & Financial Services', exchange: 'NSE', basePrice: 1820.50 },
@@ -66,8 +66,8 @@ export const NSE_STOCKS = [
   { symbol: 'BHARTIARTL', yfSymbol: 'BHARTIARTL.NS', companyName: 'Bharti Airtel Limited', sector: 'Telecommunications', exchange: 'NSE', basePrice: 1540.60 },
   { symbol: 'TITAN', yfSymbol: 'TITAN.NS', companyName: 'Titan Company Limited', sector: 'Consumer Discretionary', exchange: 'NSE', basePrice: 3480.00 },
   { symbol: 'ASIANPAINT', yfSymbol: 'ASIANPAINT.NS', companyName: 'Asian Paints Limited', sector: 'Paints & Consumer', exchange: 'NSE', basePrice: 2780.00 },
-  { symbol: 'TRENT', yfSymbol: 'TRENT.NS', companyName: 'Trent Limited (Tata Retail / Zudio)', sector: 'Retail & Consumer', exchange: 'NSE', basePrice: 6850.00 },
-  { symbol: 'ZOMATO', yfSymbol: 'ZOMATO.NS', companyName: 'Zomato Limited (Blinkit)', sector: 'Consumer Internet', exchange: 'NSE', basePrice: 265.40 },
+  { symbol: 'TRENT', yfSymbol: 'TRENT.NS', companyName: 'Trent Limited (Tata Retail / Zudio)', sector: 'Retail & Consumer', exchange: 'NSE', basePrice: 2978.00 },
+  { symbol: 'ZOMATO', yfSymbol: 'ZOMATO.NS', companyName: 'Zomato Limited (Eternal / Blinkit)', sector: 'Consumer Internet', exchange: 'NSE', basePrice: 318.00 },
   { symbol: 'ADANIENT', yfSymbol: 'ADANIENT.NS', companyName: 'Adani Enterprises Limited', sector: 'Conglomerate & Infra', exchange: 'NSE', basePrice: 3040.00 },
   { symbol: 'ADANIPORTS', yfSymbol: 'ADANIPORTS.NS', companyName: 'Adani Ports & SEZ Ltd.', sector: 'Ports & Infrastructure', exchange: 'NSE', basePrice: 1460.00 },
 ];
@@ -104,25 +104,28 @@ export const fetchYFChart = async (symbol, range = '3mo', interval = '1d') => {
     return cached.data;
   }
 
-  // 1. Try local Vite proxy first (bypasses browser CORS completely)
+  // 1. Try local Vite proxy first (bypasses browser CORS)
   const proxyUrl = `/api/yf/v8/finance/chart/${yfTicker}?range=${range}&interval=${interval}`;
-  const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yfTicker}?range=${range}&interval=${interval}`;
+  const directTarget = `https://query1.finance.yahoo.com/v8/finance/chart/${yfTicker}?range=${range}&interval=${interval}`;
+  const corsProxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(directTarget)}`;
+  const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directTarget)}`;
 
   let json = null;
 
-  try {
-    const res = await fetchWithTimeout(proxyUrl, 2500);
-    if (res.ok) {
-      json = await res.json();
-    }
-  } catch {
+  // Try Endpoints sequentially
+  const urlsToTry = [proxyUrl, corsProxyUrl, allOriginsUrl, directTarget];
+  for (const url of urlsToTry) {
     try {
-      const res = await fetchWithTimeout(directUrl, 2500);
+      const res = await fetchWithTimeout(url, 3500);
       if (res.ok) {
-        json = await res.json();
+        const parsed = await res.json();
+        if (parsed?.chart?.result?.[0]) {
+          json = parsed;
+          break;
+        }
       }
     } catch {
-      // Ignore
+      // Continue to next mirror
     }
   }
 
@@ -139,16 +142,31 @@ export const fetchYFChart = async (symbol, range = '3mo', interval = '1d') => {
  * Generates realistic price history as immediate fallback
  */
 export const generateBaselinePrices = (basePrice = 1310, symbol = 'STOCK') => {
-  return Array.from({ length: 60 }).map((_, i) => {
-    const date = new Date(2026, 5, 1);
-    date.setDate(date.getDate() + i);
+  let hash = 0;
+  for (let c = 0; c < symbol.length; c++) {
+    hash = (hash << 5) - hash + symbol.charCodeAt(c);
+    hash |= 0;
+  }
+  const seed = Math.abs(hash);
+  const bias = (seed % 100) / 100;
+
+  // Real market distribution: 60% Bullish Uptrend, 25% Consolidation, 15% Pullback/Sell
+  const isStrongBull = bias >= 0.38;
+  const isBearish = bias < 0.16;
+  const trendFactor = isStrongBull ? 0.0026 : isBearish ? -0.0022 : 0.0004;
+  const waveFreq = 2.4 + (seed % 6) * 0.4;
+
+  return Array.from({ length: 65 }).map((_, i) => {
+    const date = new Date(Date.now() - (64 - i) * 86400000);
     const dateStr = date.toISOString().split('T')[0];
-    const trend = (i * 0.002) * basePrice;
-    const wave = Math.sin(i / 3.5) * (basePrice * 0.015);
-    const close = Number((basePrice * 0.94 + trend + wave).toFixed(2));
-    const open = Number((close * (1 + (Math.random() * 0.008 - 0.004))).toFixed(2));
-    const high = Number((Math.max(open, close) * 1.008).toFixed(2));
-    const low = Number((Math.min(open, close) * 0.992).toFixed(2));
+    const trend = (i - 25) * trendFactor * basePrice;
+    const wave = Math.sin((i + (seed % 12)) / waveFreq) * (basePrice * 0.022);
+    const noise = Math.cos((i * 1.8 + seed)) * (basePrice * 0.007);
+    const close = Number(Math.max(basePrice * 0.6, basePrice + trend + wave + noise).toFixed(2));
+    const open = Number((close * (1 + Math.sin(i * 3 + seed) * 0.005)).toFixed(2));
+    const high = Number((Math.max(open, close) * (1 + Math.abs(Math.sin(i + seed)) * 0.008 + 0.002)).toFixed(2));
+    const low = Number((Math.min(open, close) * (1 - Math.abs(Math.cos(i + seed)) * 0.008 - 0.002)).toFixed(2));
+    const volume = Math.floor(1500000 + ((seed * (i + 1)) % 4000000));
 
     return {
       date: dateStr,
@@ -163,7 +181,7 @@ export const generateBaselinePrices = (basePrice = 1310, symbol = 'STOCK') => {
       close,
       closePrice: close,
       price: close,
-      volume: Math.floor(3500000 + Math.random() * 2000000),
+      volume,
     };
   });
 };
@@ -221,6 +239,7 @@ export const calculateTechnicalIndicators = (prices) => {
 
   const closes = prices.map((p) => p.close);
   const n = closes.length;
+  const latestClose = closes[n - 1] || closes[0] || 1500;
 
   // 1. Calculate EMA 20 and EMA 50
   const k20 = 2 / (20 + 1);
@@ -317,7 +336,6 @@ export const calculateTechnicalIndicators = (prices) => {
   const sma200 = closes.reduce((sum, c) => sum + c, 0) / n;
   const latestSMA200 = Number(sma200.toFixed(2));
 
-  const latestClose = closes[n - 1];
   const latestEMA20 = Number(ema20Arr[n - 1].toFixed(2));
   const latestEMA50 = Number(ema50Arr[n - 1].toFixed(2));
   const latestRSI = rsiArr[n - 1] || 55;
@@ -357,8 +375,8 @@ export const calculateTechnicalIndicators = (prices) => {
   swingScore += 10;
 
   let overallSignal = 'WATCH';
-  if (swingScore >= 68) overallSignal = 'BUY';
-  else if (swingScore <= 35) overallSignal = 'SELL';
+  if (swingScore >= 58) overallSignal = 'BUY';
+  else if (swingScore <= 38) overallSignal = 'SELL';
 
   const confidenceScore = Math.min(96, Math.max(52, swingScore));
 
@@ -388,12 +406,13 @@ export const calculateTechnicalIndicators = (prices) => {
   };
 
   // Build comprehensive daily candle history for Recharts Line & Bar charts
-  const history = prices.map((p, i) => {
+  const history = (Array.isArray(prices) ? prices : []).map((p, i) => {
     const rawDate = p.tradeDate || p.date || new Date(Date.now() - (n - 1 - i) * 86400000).toISOString().split('T')[0];
     const cPrice = p.close || p.price || 0;
+    const strDate = String(rawDate || '');
     return {
       date: rawDate,
-      displayDate: p.displayDate || rawDate.slice(5),
+      displayDate: p.displayDate || (strDate.length >= 5 ? strDate.slice(5) : strDate),
       tradeDate: rawDate,
       price: cPrice,
       close: cPrice,
@@ -429,6 +448,9 @@ export const calculateTechnicalIndicators = (prices) => {
     },
     confidenceScore,
     swingScore,
+    score: confidenceScore,
+    targetPrice: resistanceLevel,
+    stopLoss,
     atr: latestATR,
     atr14: latestATR,
     sma200: latestSMA200,
@@ -486,43 +508,59 @@ export const getTop5SwingPicks = async () => {
     { symbol: 'HDFCBANK', score: 89, setup: 'Banking Pullback Support Bounce', holding: '7 to 15 Days', reason: 'Credit growth turnaround. Sustained above 50-day moving average with high delivery volumes.' },
   ];
 
-  return topUniverse.map((item, idx) => {
-    const meta = NSE_STOCKS.find((s) => s.symbol === item.symbol) || { companyName: `${item.symbol} Ltd.`, basePrice: 1310, sector: 'Equities' };
-    const currentPrice = meta.basePrice;
-    const targetPrice = Number((currentPrice * 1.10).toFixed(2));
-    const stopLoss = Number((currentPrice * 0.955).toFixed(2));
-    const breakevenTrigger = Number((currentPrice * 1.045).toFixed(2));
+  return Promise.all(
+    topUniverse.map(async (item, idx) => {
+      const meta = NSE_STOCKS.find((s) => s.symbol === item.symbol) || { yfSymbol: `${item.symbol}.NS`, companyName: `${item.symbol} Ltd.`, basePrice: 1310, sector: 'Equities' };
+      
+      let livePrice = meta.basePrice;
+      try {
+        const yfData = await fetchYFChart(item.symbol);
+        if (yfData?.meta?.regularMarketPrice) {
+          livePrice = yfData.meta.regularMarketPrice;
+        } else if (yfData?.indicators?.quote?.[0]?.close) {
+          const closes = yfData.indicators.quote[0].close.filter((c) => c !== null && !isNaN(c));
+          if (closes.length) livePrice = closes[closes.length - 1];
+        }
+      } catch {
+        // Fallback to meta basePrice
+      }
 
-    return {
-      id: item.symbol,
-      symbol: item.symbol,
-      stock: item.symbol,
-      companyName: meta.companyName,
-      sector: meta.sector,
-      exchange: 'NSE',
-      recommendation: 'BUY',
-      confidenceScore: item.score,
-      swingScore: item.score,
-      currentPrice,
-      targetPrice,
-      stopLoss,
-      upsidePercent: '+10.0%',
-      downsidePercent: '-4.5%',
-      setupType: item.setup,
-      expectedHolding: item.holding,
-      holdingDays: item.holding,
-      sellRules: {
-        targetExit: `Sell 70% to 100% position at Target ₹${targetPrice.toFixed(2)} (+10.0%)`,
-        stopLossExit: `Exit 100% immediately if daily close is below Stop Loss ₹${stopLoss.toFixed(2)} (-4.5%)`,
-        trailingRule: `Once stock reaches ₹${breakevenTrigger.toFixed(2)} (+4.5%), move Stop Loss to Entry (₹${currentPrice.toFixed(2)}) for a risk-free trade.`,
-        timeStop: `Exit if target not achieved within ${item.holding.split(' ')[2]} trading days.`,
-      },
-      reason: item.reason,
-      rank: idx + 1,
-      rankBadge: `#${idx + 1} Best Swing Pick`,
-      createdAt: new Date().toISOString(),
-      date: new Date().toISOString().split('T')[0],
-      riskRewardRatio: '2.22:1',
-    };
-  });
+      const currentPrice = Number(livePrice.toFixed(2));
+      const targetPrice = Number((currentPrice * 1.10).toFixed(2));
+      const stopLoss = Number((currentPrice * 0.955).toFixed(2));
+      const breakevenTrigger = Number((currentPrice * 1.045).toFixed(2));
+
+      return {
+        id: item.symbol,
+        symbol: item.symbol,
+        stock: item.symbol,
+        companyName: meta.companyName,
+        sector: meta.sector,
+        exchange: 'NSE',
+        recommendation: 'BUY',
+        confidenceScore: item.score,
+        swingScore: item.score,
+        currentPrice,
+        targetPrice,
+        stopLoss,
+        upsidePercent: '+10.0%',
+        downsidePercent: '-4.5%',
+        setupType: item.setup,
+        expectedHolding: item.holding,
+        holdingDays: item.holding,
+        sellRules: {
+          targetExit: `Sell 70% to 100% position at Target ₹${targetPrice.toFixed(2)} (+10.0%)`,
+          stopLossExit: `Exit 100% immediately if daily close is below Stop Loss ₹${stopLoss.toFixed(2)} (-4.5%)`,
+          trailingRule: `Once stock reaches ₹${breakevenTrigger.toFixed(2)} (+4.5%), move Stop Loss to Entry (₹${currentPrice.toFixed(2)}) for a risk-free trade.`,
+          timeStop: `Exit if target not achieved within ${item.holding.split(' ')[2]} trading days.`,
+        },
+        reason: item.reason,
+        rank: idx + 1,
+        rankBadge: `#${idx + 1} Best Swing Pick`,
+        createdAt: new Date().toISOString(),
+        date: new Date().toISOString().split('T')[0],
+        riskRewardRatio: '2.22:1',
+      };
+    })
+  );
 };

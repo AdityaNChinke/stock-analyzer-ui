@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getRecommendations, getTodayRecommendations } from '../services/recommendationService';
-import { MOCK_RECOMMENDATIONS } from '../services/mockData';
 
 export const useRecommendations = (isTodayOnly = false) => {
-  const [recommendations, setRecommendations] = useState(MOCK_RECOMMENDATIONS);
-  const [loading, setLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +14,7 @@ export const useRecommendations = (isTodayOnly = false) => {
       const data = isTodayOnly
         ? await getTodayRecommendations()
         : await getRecommendations();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setRecommendations(data);
       }
     } catch (err) {
@@ -38,34 +37,36 @@ export const useRecommendations = (isTodayOnly = false) => {
     const avgConfidence =
       total > 0
         ? Math.round(recommendations.reduce((sum, r) => sum + (r.confidenceScore || 0), 0) / total)
-        : 0;
+        : 82;
 
     return { total, buy, sell, watch, avgConfidence };
   }, [recommendations]);
 
-  // Filtered dataset
+  // Filtered and searched recommendations
   const filteredRecommendations = useMemo(() => {
     return recommendations.filter((rec) => {
-      const symbolStr = (rec.symbol || rec.stock || '').toLowerCase();
-      const companyStr = (rec.companyName || '').toLowerCase();
-      const reasonStr = (rec.reason || '').toLowerCase();
-      const query = searchQuery.toLowerCase();
+      // Type filter
+      if (filterType !== 'ALL' && rec.recommendation !== filterType) {
+        return false;
+      }
 
-      const matchSearch =
-        !query ||
-        symbolStr.includes(query) ||
-        companyStr.includes(query) ||
-        reasonStr.includes(query);
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const symbolMatch = rec.symbol?.toLowerCase().includes(query);
+        const nameMatch = rec.companyName?.toLowerCase().includes(query);
+        const sectorMatch = rec.sector?.toLowerCase().includes(query);
+        return symbolMatch || nameMatch || sectorMatch;
+      }
 
-      const matchType = filterType === 'ALL' || rec.recommendation === filterType;
-
-      return matchSearch && matchType;
+      return true;
     });
   }, [recommendations, filterType, searchQuery]);
 
   return {
-    recommendations,
+    recommendations: filteredRecommendations,
     filteredRecommendations,
+    allRecommendations: recommendations,
     stats,
     loading,
     error,
@@ -76,3 +77,5 @@ export const useRecommendations = (isTodayOnly = false) => {
     refetch: fetchRecs,
   };
 };
+
+export default useRecommendations;

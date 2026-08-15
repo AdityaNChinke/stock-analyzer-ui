@@ -18,11 +18,13 @@ import {
   Circle as CircleIcon,
   AccountBalanceWallet as WalletIcon,
   Telegram as TelegramIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { subscribeToBackendStatus, API_BASE_URL } from '../services/api';
 import { NSE_STOCKS } from '../services/yahooFinanceService';
 import TelegramAlertModal from '../components/common/TelegramAlertModal';
+import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../utils/constants';
 
 export const TopNavbar = ({
@@ -31,6 +33,7 @@ export const TopNavbar = ({
   onToggleTheme = () => {},
 }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isLive, setIsLive] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
 
@@ -209,6 +212,22 @@ export const TopNavbar = ({
               ) : (
                 <DarkModeIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
               )}
+            </IconButton>
+          </Tooltip>
+
+          {/* 🔒 Lock Terminal Button */}
+          <Tooltip title="Lock Terminal (Voice Authentication)">
+            <IconButton
+              onClick={logout}
+              sx={{
+                p: 1,
+                bgcolor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 2,
+                color: 'error.main',
+              }}
+            >
+              <LockIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
         </Toolbar>

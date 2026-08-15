@@ -1,7 +1,7 @@
-import { Card, CardContent, Box, Typography, Avatar } from '@mui/material';
+import { Card, CardContent, Box, Typography, Avatar, Tooltip } from '@mui/material';
 
 /**
- * Reusable Dashboard KPI Stat Card
+ * Reusable Dashboard KPI Stat Card with Intuitive Plain-English Tooltips
  */
 export const StatCard = ({
   title,
@@ -12,14 +12,16 @@ export const StatCard = ({
   badgeText = null,
   badgeType = 'positive',
   onClick = null,
+  tooltip = null,
 }) => {
-  return (
+  const cardContent = (
     <Card
       onClick={onClick}
       sx={{
         position: 'relative',
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.2s ease',
         '&:hover': onClick
           ? {
               transform: 'translateY(-2px)',
@@ -111,6 +113,16 @@ export const StatCard = ({
       </CardContent>
     </Card>
   );
+
+  if (tooltip) {
+    return (
+      <Tooltip title={tooltip} arrow placement="top">
+        {cardContent}
+      </Tooltip>
+    );
+  }
+
+  return cardContent;
 };
 
 export default StatCard;

@@ -9,6 +9,7 @@ import {
   Button,
   Divider,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import {
   ShowChart as ChartIcon,
@@ -34,13 +35,14 @@ export const TodayRecommendationsPage = () => {
   const [tradeModalStock, setTradeModalStock] = useState(null);
 
   const {
-    recommendations,
+    recommendations = [],
     loading,
     error,
     refetch,
   } = useRecommendations(true);
 
-  const top5Picks = recommendations.slice(0, 5);
+  const safeRecs = Array.isArray(recommendations) ? recommendations : [];
+  const top5Picks = safeRecs.slice(0, 5);
 
   return (
     <Box>
@@ -117,92 +119,114 @@ export const TodayRecommendationsPage = () => {
                     <CardContent sx={{ p: 3, flexGrow: 1 }}>
                       {/* Top Rank Badge & Status Header */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                        <Chip
-                          icon={<StarIcon sx={{ fontSize: '13px !important' }} />}
-                          label={`#${rank} Best Swing Pick`}
-                          size="small"
-                          sx={{
-                            fontWeight: 800,
-                            fontSize: '0.7rem',
-                            bgcolor: `${rankColor}1A`,
-                            color: rankColor,
-                            border: `1px solid ${rankColor}40`,
-                          }}
-                        />
-                        <StatusChip status={rec.recommendation} size="small" />
+                        <Tooltip title={`🏆 #${rank} Highest-Conviction Setup: Scored highest on institutional trend alignment and risk-to-reward.`} arrow>
+                          <Chip
+                            icon={<StarIcon sx={{ fontSize: '13px !important' }} />}
+                            label={`#${rank} Best Swing Pick`}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: '0.7rem',
+                              bgcolor: `${rankColor}1A`,
+                              color: rankColor,
+                              border: `1px solid ${rankColor}40`,
+                            }}
+                          />
+                        </Tooltip>
+                        <Tooltip title={`Algorithmic Signal: ${rec.recommendation}`} arrow>
+                          <span>
+                            <StatusChip status={rec.recommendation} size="small" />
+                          </span>
+                        </Tooltip>
                       </Box>
 
                       {/* Stock Symbol & Setup Type */}
                       <Box sx={{ mb: 1.5 }}>
-                        <Typography
-                          variant="h5"
-                          sx={{
-                            fontWeight: 800,
-                            fontFamily: 'JetBrains Mono, monospace',
-                            color: 'primary.main',
-                          }}
-                        >
-                          {symbol}
-                        </Typography>
+                        <Tooltip title={`Tap 'When to Sell & Chart' below to view full indicators for ${symbol}`} arrow>
+                          <Typography
+                            variant="h5"
+                            sx={{
+                              fontWeight: 800,
+                              fontFamily: 'JetBrains Mono, monospace',
+                              color: 'primary.main',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => navigate(`/stocks/${symbol}`)}
+                          >
+                            {symbol}
+                          </Typography>
+                        </Tooltip>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
                             {rec.companyName || rec.sector}
                           </Typography>
                           {rec.setupType && (
-                            <Chip
-                              label={rec.setupType}
-                              size="small"
-                              variant="outlined"
-                              sx={{ fontSize: '0.65rem', fontWeight: 700, height: 20 }}
-                            />
+                            <Tooltip title={`Technical Pattern: ${rec.setupType}`} arrow>
+                              <Chip
+                                label={rec.setupType}
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: '0.65rem', fontWeight: 700, height: 20 }}
+                              />
+                            </Tooltip>
                           )}
                         </Box>
                       </Box>
 
                       {/* ⏱️ HOLDING PERIOD BADGE */}
-                      <Box sx={{ mb: 2, p: 1, borderRadius: 1.5, bgcolor: 'rgba(59, 130, 246, 0.08)', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <TimerIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                          Expected Holding Period: <strong>{holdingTime}</strong>
-                        </Typography>
-                      </Box>
+                      <Tooltip title="⏱️ Target Time Horizon: Expected number of trading days to achieve the profit target based on average daily ATR volatility." arrow>
+                        <Box sx={{ mb: 2, p: 1, borderRadius: 1.5, bgcolor: 'rgba(59, 130, 246, 0.08)', display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
+                          <TimerIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            Expected Holding Period: <strong>{holdingTime}</strong>
+                          </Typography>
+                        </Box>
+                      </Tooltip>
 
                       {/* Confidence Score Gauge */}
-                      <Box sx={{ mb: 2 }}>
-                        <ConfidenceGauge score={rec.confidenceScore} />
-                      </Box>
+                      <Tooltip title={`AI Confidence Rating: ${rec.confidenceScore}% probability based on RSI sweet spot and Moving Average alignment.`} arrow>
+                        <Box sx={{ mb: 2 }}>
+                          <ConfidenceGauge score={rec.confidenceScore} />
+                        </Box>
+                      </Tooltip>
 
                       {/* Key Price Targets */}
                       <Grid container spacing={1.5} sx={{ mb: 2 }}>
                         <Grid size={{ xs: 4 }}>
-                          <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
-                              ENTRY
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
-                              {formatCurrency(rec.currentPrice)}
-                            </Typography>
-                          </Box>
+                          <Tooltip title="Recommended entry price based on live market quote" arrow>
+                            <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
+                                ENTRY
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
+                                {formatCurrency(rec.currentPrice)}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
                         </Grid>
                         <Grid size={{ xs: 4 }}>
-                          <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
-                              SELL TARGET
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace', color: 'success.main' }}>
-                              {formatCurrency(rec.targetPrice)}
-                            </Typography>
-                          </Box>
+                          <Tooltip title={`💰 Target Price: Projected profit exit level giving a +${(((rec.targetPrice - rec.currentPrice) / (rec.currentPrice || 1)) * 100).toFixed(1)}% gain.`} arrow>
+                            <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
+                                SELL TARGET
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace', color: 'success.main' }}>
+                                {formatCurrency(rec.targetPrice)}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
                         </Grid>
                         <Grid size={{ xs: 4 }}>
-                          <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
-                              STOP LOSS
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace', color: 'error.main' }}>
-                              {formatCurrency(rec.stopLoss)}
-                            </Typography>
-                          </Box>
+                          <Tooltip title={`🛑 Safety Stop-Loss: Exit if price drops below this level to restrict maximum risk to -${(((rec.currentPrice - rec.stopLoss) / (rec.currentPrice || 1)) * 100).toFixed(1)}%.`} arrow>
+                            <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
+                                STOP LOSS
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace', color: 'error.main' }}>
+                                {formatCurrency(rec.stopLoss)}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
                         </Grid>
                       </Grid>
 
@@ -215,24 +239,28 @@ export const TodayRecommendationsPage = () => {
                     <Divider />
 
                     <CardActions sx={{ p: 2, display: 'flex', gap: 1, justifyContent: 'space-between' }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<WalletIcon sx={{ color: 'primary.main' }} />}
-                        onClick={() => setTradeModalStock(rec)}
-                        sx={{ textTransform: 'none', fontWeight: 700, borderColor: 'divider' }}
-                      >
-                        Simulate Buy
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        endIcon={<ChartIcon />}
-                        onClick={() => navigate(`/stocks/${symbol}`)}
-                        sx={{ textTransform: 'none', fontWeight: 700 }}
-                      >
-                        When to Sell & Chart
-                      </Button>
+                      <Tooltip title="Test buying this stock in your virtual paper trading account with ₹1,00,000 cash" arrow>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<WalletIcon sx={{ color: 'primary.main' }} />}
+                          onClick={() => setTradeModalStock(rec)}
+                          sx={{ textTransform: 'none', fontWeight: 700, borderColor: 'divider' }}
+                        >
+                          Simulate Buy
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="View full candlestick history, technical indicators & exact exit strategy" arrow>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          endIcon={<ChartIcon />}
+                          onClick={() => navigate(`/stocks/${symbol}`)}
+                          sx={{ textTransform: 'none', fontWeight: 700 }}
+                        >
+                          When to Sell & Chart
+                        </Button>
+                      </Tooltip>
                     </CardActions>
                   </Card>
                 </Grid>
