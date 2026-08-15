@@ -95,30 +95,41 @@ export const PriceChart = ({
   const theme = useTheme();
   const [timeframe, setTimeframe] = useState('1M');
 
+  // Safely normalize data into an Array
+  const safeData = useMemo(() => {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object') {
+      if (Array.isArray(data.history)) return data.history;
+      if (Array.isArray(data.prices)) return data.prices;
+      if (Array.isArray(data.data)) return data.data;
+    }
+    return [];
+  }, [data]);
+
   // Filter data based on selected timeframe
   const filteredData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+    if (!safeData || safeData.length === 0) return [];
     switch (timeframe) {
       case '1W':
-        return data.slice(-5);
+        return safeData.slice(-5);
       case '1M':
-        return data.slice(-22);
+        return safeData.slice(-22);
       case '3M':
-        return data.slice(-66);
+        return safeData.slice(-66);
       case '6M':
-        return data.slice(-130);
+        return safeData.slice(-130);
       case '1Y':
-        return data.slice(-250);
+        return safeData.slice(-250);
       default:
-        return data;
+        return safeData;
     }
-  }, [data, timeframe]);
+  }, [safeData, timeframe]);
 
   // Calculate return over the selected period
   const periodReturn = useMemo(() => {
     if (filteredData.length < 2) return 0;
-    const first = filteredData[0].close || filteredData[0].price;
-    const last = filteredData[filteredData.length - 1].close || filteredData[filteredData.length - 1].price;
+    const first = filteredData[0].close || filteredData[0].price || 1;
+    const last = filteredData[filteredData.length - 1].close || filteredData[filteredData.length - 1].price || 1;
     return ((last - first) / first) * 100;
   }, [filteredData]);
 
@@ -130,13 +141,14 @@ export const PriceChart = ({
   const [minPrice, maxPrice] = useMemo(() => {
     if (!filteredData.length) return [0, 100];
     const prices = filteredData.map((d) => d.close || d.price || 0).filter(Boolean);
+    if (!prices.length) return [0, 100];
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     const padding = (max - min) * 0.08 || 5;
     return [Math.floor(min - padding), Math.ceil(max + padding)];
   }, [filteredData]);
 
-  if (!data || data.length === 0) {
+  if (!safeData || safeData.length === 0) {
     return (
       <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3, height }}>
         <Typography variant="body2" color="text.secondary">

@@ -215,20 +215,8 @@ export const parseYFHistory = (yfResult) => {
 export const calculateTechnicalIndicators = (prices) => {
   if (!prices || prices.length < 15) {
     const fallbackPrice = prices?.[prices.length - 1]?.close || 1310;
-    return {
-      currentPrice: fallbackPrice,
-      rsi: 58.4,
-      rsi14: 58.4,
-      ema20: Number((fallbackPrice * 0.98).toFixed(2)),
-      ema50: Number((fallbackPrice * 0.95).toFixed(2)),
-      macd: { macd: 14.5, signal: 11.2, histogram: 3.3 },
-      signals: { rsiSignal: 'ACCUMULATION_ZONE', trendSignal: 'BULLISH_UPTREND', macdSignal: 'BULLISH', overallSignal: 'BUY' },
-      confidenceScore: 88,
-      swingScore: 88,
-      supportLevel: Number((fallbackPrice * 0.955).toFixed(2)),
-      resistanceLevel: Number((fallbackPrice * 1.105).toFixed(2)),
-      history: [],
-    };
+    const basePrices = generateBaselinePrices(fallbackPrice, 'RELIANCE');
+    return calculateTechnicalIndicators(basePrices);
   }
 
   const closes = prices.map((p) => p.close);
@@ -397,7 +385,28 @@ export const calculateTechnicalIndicators = (prices) => {
     trailingStopRule: `Once price reaches ₹${breakevenTriggerPrice.toFixed(2)} (+4.5%), move your Stop Loss up to Entry Price (₹${latestClose.toFixed(2)}) to lock in a risk-free trade.`,
     timeStopRule: `Exit trade at market price if neither Target nor Stop is hit within ${holdingDaysMax} trading days.`,
     overboughtExit: `Take partial profit if RSI climbs above 72 on daily timeframe.`,
-  };
+  // Build comprehensive daily candle history for Recharts Line & Bar charts
+  const history = prices.map((p, i) => {
+    const rawDate = p.tradeDate || p.date || new Date(Date.now() - (n - 1 - i) * 86400000).toISOString().split('T')[0];
+    const cPrice = p.close || p.price || 0;
+    return {
+      date: rawDate,
+      displayDate: p.displayDate || rawDate.slice(5),
+      tradeDate: rawDate,
+      price: cPrice,
+      close: cPrice,
+      open: p.open || cPrice,
+      high: p.high || cPrice,
+      low: p.low || cPrice,
+      volume: p.volume || 1000000,
+      ema20: Number((ema20Arr[i] || cPrice).toFixed(2)),
+      ema50: Number((ema50Arr[i] || cPrice).toFixed(2)),
+      rsi: Number((rsiArr[i] || 50).toFixed(1)),
+      macd: Number((macdLineArr[i] || 0).toFixed(2)),
+      signal: Number((signalLineArr[i] || 0).toFixed(2)),
+      histogram: Number((macdHist[i] || 0).toFixed(2)),
+    };
+  });
 
   return {
     currentPrice: latestClose,

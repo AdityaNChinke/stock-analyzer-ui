@@ -46,8 +46,9 @@ export const IndicatorChart = ({
     ema50 = 0,
     macd = { macd: 0, signal: 0, histogram: 0 },
     signals = {},
-    history = [],
   } = indicators;
+
+  const history = Array.isArray(indicators?.history) ? indicators.history : [];
 
   const isDark = theme.palette.mode === 'dark';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
