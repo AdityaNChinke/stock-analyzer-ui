@@ -12,6 +12,7 @@ import {
   TableRow,
   Chip,
   Button,
+  LinearProgress,
   useTheme,
 } from '@mui/material';
 import {
@@ -19,6 +20,8 @@ import {
   QueryStats as StatsIcon,
   ShowChart as ReturnIcon,
   Timeline as StrategyIcon,
+  Psychology as BrainIcon,
+  AutoGraph as AutoGraphIcon,
 } from '@mui/icons-material';
 import {
   ResponsiveContainer,
@@ -28,10 +31,10 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { getPerformanceMetrics } from '../services/performanceService';
+import { getLearningModel } from '../services/adaptiveLearningService';
 import PageHeader from '../components/common/PageHeader';
 import StatCard from '../components/dashboard/StatCard';
 import LoadingComponent from '../components/common/LoadingComponent';
@@ -42,6 +45,7 @@ export const PerformancePage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [data, setData] = useState(null);
+  const [learningModel, setLearningModel] = useState(getLearningModel());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -51,6 +55,7 @@ export const PerformancePage = () => {
     try {
       const res = await getPerformanceMetrics();
       setData(res);
+      setLearningModel(getLearningModel());
     } catch (err) {
       setError(err.message || 'Failed to load performance metrics');
     } finally {
@@ -111,8 +116,8 @@ export const PerformancePage = () => {
   return (
     <Box>
       <PageHeader
-        title="Recommendation Performance"
-        subtitle="Empirical audit, win rate metrics, and historical returns from algorithmic signals."
+        title="Recommendation Performance & Adaptive AI Engine"
+        subtitle="Empirical audit, win rate metrics, and day-by-day self-learning calibration."
         breadcrumbs={[
           { label: 'Dashboard', path: '/dashboard' },
           { label: 'Performance', path: null },
@@ -141,7 +146,7 @@ export const PerformancePage = () => {
           <StatCard
             title="Cumulative Return"
             value={formatPercent(strategyReturn)}
-            subtitle={`vs S&P 500 (${formatPercent(benchmarkReturn)})`}
+            subtitle={`vs Benchmark (${formatPercent(benchmarkReturn)})`}
             icon={<ReturnIcon />}
             accentColor="#3b82f6"
             badgeText="+31.8% Alpha"
@@ -176,7 +181,60 @@ export const PerformancePage = () => {
         </Grid>
       </Grid>
 
-      {/* Monthly Performance Chart (Strategy vs S&P 500) */}
+      {/* 🧠 SECTION: ADAPTIVE SELF-LEARNING INTELLIGENCE MATRIX */}
+      <Paper sx={{ p: 3, mb: 3.5, borderRadius: 3, border: '1px solid rgba(59, 130, 246, 0.3)', bgcolor: 'background.paper' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <BrainIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                Day-by-Day Adaptive Strategy Calibration
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                The algorithm automatically optimizes indicator weights with every completed trading session.
+              </Typography>
+            </Box>
+          </Box>
+          <Chip
+            icon={<AutoGraphIcon />}
+            label={`Analyzed ${learningModel.totalSessionsAnalyzed} Daily Sessions`}
+            size="small"
+            sx={{ fontWeight: 700, bgcolor: 'rgba(59, 130, 246, 0.12)', color: 'primary.main' }}
+          />
+        </Box>
+
+        <Grid container spacing={2.5}>
+          {Object.entries(learningModel.patternWeights).map(([key, val]) => (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={key}>
+              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'background.subtle', border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>
+                  {val.name}
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'monospace', color: 'success.main' }}>
+                    {val.winRate}% Win
+                  </Typography>
+                  <Chip
+                    label={`${val.weight}x Boost`}
+                    size="small"
+                    sx={{ fontSize: '0.68rem', fontWeight: 800, height: 20, bgcolor: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}
+                  />
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={val.winRate}
+                  sx={{ height: 6, borderRadius: 3, bgcolor: 'divider', '& .MuiLinearProgress-bar': { bgcolor: 'success.main' } }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}>
+                  Calibrated on {val.totalTrades} historical setups
+                </Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Paper>
+
+      {/* Monthly Performance Chart */}
       <Paper sx={{ p: 3, mb: 3.5, borderRadius: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box>
@@ -184,12 +242,12 @@ export const PerformancePage = () => {
               Monthly Alpha Generation (% Return)
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              StockAnalyzer Algorithm vs S&P 500 Benchmark
+              StockAnalyzer Algorithm vs NIFTY 50 Benchmark
             </Typography>
           </Box>
         </Box>
 
-        <Box sx={{ width: '100%', height: 320 }}>
+        <Box sx={{ width: '100%', height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={monthlyPerformance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid
@@ -198,42 +256,44 @@ export const PerformancePage = () => {
                 vertical={false}
               />
               <XAxis dataKey="month" tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} tickFormatter={(v) => `${v}%`} orientation="right" />
+              <YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} orientation="right" />
               <Tooltip
-                contentStyle={{ backgroundColor: theme.palette.background.paper, borderColor: theme.palette.divider, borderRadius: 8 }}
-                formatter={(val, name) => [`${val}%`, name === 'strategy' ? 'Strategy Return' : 'Benchmark (S&P 500)']}
+                contentStyle={{
+                  backgroundColor: theme.palette.background.paper,
+                  borderColor: theme.palette.divider,
+                  borderRadius: 8,
+                }}
               />
-              <Legend />
-              <Bar dataKey="strategy" name="StockAnalyzer Return" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="benchmark" name="Benchmark Return" fill="#64748b" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="strategyReturn" name="StockAnalyzer" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="benchmarkReturn" name="NIFTY 50" fill="#94a3b8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Box>
       </Paper>
 
-      {/* Closed Recommendations Audit Table */}
+      {/* Strategy Audit Ledger / Closed Trades Table */}
       <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        <Box sx={{ p: 2.5, pb: 1.5 }}>
+        <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Recently Closed Recommendation Calls
+            Strategy Audit Ledger (Verified Signal Log)
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Verified execution log and realized return outcomes
+            Full transparent track record of closed recommendations and realized returns.
           </Typography>
         </Box>
 
         <TableContainer>
           <Table>
-            <TableHead>
+            <TableHead sx={{ bgcolor: 'background.subtle' }}>
               <TableRow>
-                <TableCell>Stock Symbol</TableCell>
-                <TableCell align="right">Entry Price</TableCell>
-                <TableCell align="right">Exit Price</TableCell>
-                <TableCell align="right">Realized Return</TableCell>
-                <TableCell align="center">Outcome</TableCell>
-                <TableCell align="center">Holding Duration</TableCell>
-                <TableCell align="right">Closed Date</TableCell>
-                <TableCell align="center">Action</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>SYMBOL</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>ENTRY</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>EXIT</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>REALIZED RETURN</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>OUTCOME</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>HOLD DURATION</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700 }}>CLOSED DATE</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>ACTION</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -241,7 +301,6 @@ export const PerformancePage = () => {
                 const isWin = call.outcome.includes('WIN');
                 return (
                   <TableRow key={call.id} hover>
-                    {/* Symbol */}
                     <TableCell>
                       <Typography
                         variant="subtitle2"
@@ -250,22 +309,16 @@ export const PerformancePage = () => {
                         {call.symbol}
                       </Typography>
                     </TableCell>
-
-                    {/* Entry Price */}
                     <TableCell align="right">
                       <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                         {formatCurrency(call.entryPrice)}
                       </Typography>
                     </TableCell>
-
-                    {/* Exit Price */}
                     <TableCell align="right">
                       <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
                         {formatCurrency(call.exitPrice)}
                       </Typography>
                     </TableCell>
-
-                    {/* Realized Return */}
                     <TableCell align="right">
                       <Typography
                         variant="body2"
@@ -278,8 +331,6 @@ export const PerformancePage = () => {
                         {formatPercent(call.returnPercent)}
                       </Typography>
                     </TableCell>
-
-                    {/* Outcome Badge */}
                     <TableCell align="center">
                       <Chip
                         label={call.outcome}
@@ -292,22 +343,16 @@ export const PerformancePage = () => {
                         }}
                       />
                     </TableCell>
-
-                    {/* Duration */}
                     <TableCell align="center">
                       <Typography variant="caption" color="text.secondary">
                         {call.duration}
                       </Typography>
                     </TableCell>
-
-                    {/* Closed Date */}
                     <TableCell align="right">
                       <Typography variant="caption" color="text.secondary">
                         {formatDate(call.closedDate)}
                       </Typography>
                     </TableCell>
-
-                    {/* Action */}
                     <TableCell align="center">
                       <Button
                         size="small"
