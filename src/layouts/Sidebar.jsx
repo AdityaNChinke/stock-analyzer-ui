@@ -21,6 +21,7 @@ import {
   Timeline as PerformanceIcon,
   CandlestickChart as BrandIcon,
   AccountBalanceWallet as WalletIcon,
+  RocketLaunch as IpoIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../utils/constants';
@@ -53,6 +54,14 @@ const NAV_ITEMS = [
     badge: 'TOP 5',
     badgeColor: 'success',
     tooltip: "🔥 Today's Top 5 Swing Picks: The 5 highest-probability trade opportunities for today with holding periods.",
+  },
+  {
+    label: 'IPO Analyzer',
+    path: ROUTES.IPOS,
+    icon: <IpoIcon />,
+    badge: '7-DAY',
+    badgeColor: 'warning',
+    tooltip: '🚀 Upcoming 7-Day IPOs: Real-time Grey Market Premiums (GMP), 3-year financials, peer valuations, and Apply/Avoid verdicts.',
   },
   {
     label: 'Virtual Portfolio',

@@ -216,7 +216,7 @@ export const TopNavbar = ({
           </Tooltip>
 
           {/* 🔒 Lock Terminal Button */}
-          <Tooltip title="Lock Terminal (Voice Authentication)">
+          <Tooltip title="Lock Terminal (PIN Security)">
             <IconButton
               onClick={logout}
               sx={{

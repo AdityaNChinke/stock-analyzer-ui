@@ -11,6 +11,7 @@ import RecommendationPage from './pages/RecommendationPage';
 import TodayRecommendationsPage from './pages/TodayRecommendationsPage';
 import PortfolioPage from './pages/PortfolioPage';
 import PerformancePage from './pages/PerformancePage';
+import IpoPage from './pages/IpoPage';
 import NotFoundPage from './pages/NotFoundPage';
 import VoiceLoginPage from './pages/VoiceLoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -33,6 +34,7 @@ function AppContent({ mode, toggleTheme }) {
           <Route path={ROUTES.STOCK_DETAIL} element={<StockDetailPage />} />
           <Route path={ROUTES.RECOMMENDATIONS} element={<RecommendationPage />} />
           <Route path={ROUTES.TODAY_RECOMMENDATIONS} element={<TodayRecommendationsPage />} />
+          <Route path={ROUTES.IPOS} element={<IpoPage />} />
           <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
           <Route path={ROUTES.PERFORMANCE} element={<PerformancePage />} />
           <Route path="*" element={<NotFoundPage />} />

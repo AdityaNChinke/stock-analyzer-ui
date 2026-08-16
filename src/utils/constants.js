@@ -8,6 +8,7 @@ export const ROUTES = {
   TODAY_RECOMMENDATIONS: '/recommendations/today',
   PORTFOLIO: '/portfolio',
   PERFORMANCE: '/performance',
+  IPOS: '/ipos',
 };
 
 export const RECOMMENDATION_TYPES = {

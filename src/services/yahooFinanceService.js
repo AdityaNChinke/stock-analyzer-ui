@@ -465,9 +465,20 @@ export const calculateTechnicalIndicators = (prices) => {
 };
 
 /**
- * Fetch all NIFTY 50 Indian stocks
+ * Fetch all NIFTY 50 Indian stocks with active live network quotes
  */
 export const getLiveIndianStocks = async () => {
+  // Fetch live quotes for top universe in parallel with fast timeout
+  const priorityStocks = NSE_STOCKS.slice(0, 15);
+  await Promise.allSettled(
+    priorityStocks.map(async (s) => {
+      const cacheKey = `${s.yfSymbol}_3mo_1d`;
+      if (!cache.has(cacheKey)) {
+        await fetchYFChart(s.symbol, '3mo', '1d');
+      }
+    })
+  );
+
   return NSE_STOCKS.map((stock) => {
     const cached = cache.get(`${stock.yfSymbol}_3mo_1d`);
     let price = stock.basePrice;
