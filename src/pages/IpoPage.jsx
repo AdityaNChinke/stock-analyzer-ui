@@ -51,6 +51,7 @@ import {
   getUpcoming7DaysIpos,
   getOpenIpos,
   getRecentListedIpos,
+  getEnrichedIpos,
 } from '../services/ipoService';
 import {
   initWeeklyIpoScheduler,
@@ -96,6 +97,13 @@ export const IpoPage = () => {
     }
   };
 
+  // Dynamically enriched IPO dataset based on current calendar date
+  const allIpos = useMemo(() => getEnrichedIpos(), []);
+
+  const upcomingCount = useMemo(() => allIpos.filter((i) => i.status === 'UPCOMING_7_DAYS').length, [allIpos]);
+  const openNowCount = useMemo(() => allIpos.filter((i) => i.status === 'OPEN_NOW').length, [allIpos]);
+  const recentlyListedCount = useMemo(() => allIpos.filter((i) => i.status === 'RECENTLY_LISTED').length, [allIpos]);
+
   // Filtered dataset
   const currentTabStatus = useMemo(() => {
     if (tabValue === 0) return 'UPCOMING_7_DAYS';
@@ -105,7 +113,7 @@ export const IpoPage = () => {
   }, [tabValue]);
 
   const displayedIpos = useMemo(() => {
-    return IPOS_DATA.filter((ipo) => {
+    return allIpos.filter((ipo) => {
       if (currentTabStatus !== 'ALL' && ipo.status !== currentTabStatus) return false;
       if (selectedVerdict !== 'ALL' && ipo.decision?.verdict !== selectedVerdict) return false;
       if (selectedType !== 'ALL' && ipo.issueType !== selectedType) return false;
@@ -120,7 +128,7 @@ export const IpoPage = () => {
 
       return true;
     });
-  }, [currentTabStatus, selectedVerdict, selectedType, searchQuery]);
+  }, [allIpos, currentTabStatus, selectedVerdict, selectedType, searchQuery]);
 
   const handleSendTelegram = async (ipo) => {
     try {
@@ -307,25 +315,25 @@ export const IpoPage = () => {
             <Tab
               icon={<EventIcon />}
               iconPosition="start"
-              label="📅 Upcoming in Next 7 Days (6)"
+              label={`📅 Upcoming in Next 7 Days (${upcomingCount})`}
               sx={{ textTransform: 'none', fontWeight: 800 }}
             />
             <Tab
               icon={<HotIcon sx={{ color: '#10b981' }} />}
               iconPosition="start"
-              label="🟢 Open For Bidding (2)"
+              label={`🟢 Open For Bidding (${openNowCount})`}
               sx={{ textTransform: 'none', fontWeight: 800 }}
             />
             <Tab
               icon={<AssessmentIcon />}
               iconPosition="start"
-              label="📊 All IPOs (Mainboard & SME)"
+              label={`📊 All IPOs (${allIpos.length})`}
               sx={{ textTransform: 'none', fontWeight: 800 }}
             />
             <Tab
               icon={<ShieldIcon />}
               iconPosition="start"
-              label="📜 Recently Listed Audit (4)"
+              label={`📜 Recently Listed Audit (${recentlyListedCount})`}
               sx={{ textTransform: 'none', fontWeight: 800 }}
             />
           </Tabs>
@@ -451,10 +459,10 @@ export const IpoPage = () => {
                         </Box>
                         <Tooltip title="Current IPO timeline stage" arrow>
                           <Chip
-                            label={ipo.subscription?.status || ipo.status}
+                            label={ipo.dynamicBadge || ipo.subscription?.status || ipo.status}
                             size="small"
-                            color={ipo.status === 'OPEN_NOW' ? 'success' : 'primary'}
-                            variant="outlined"
+                            color={ipo.status === 'OPEN_NOW' ? 'success' : ipo.status === 'UPCOMING_7_DAYS' ? 'warning' : 'primary'}
+                            variant={ipo.status === 'OPEN_NOW' ? 'filled' : 'outlined'}
                             sx={{ fontWeight: 800, fontSize: '0.7rem' }}
                           />
                         </Tooltip>
@@ -537,7 +545,7 @@ export const IpoPage = () => {
 
                         {/* Grey Market Premium (GMP) */}
                         <Grid size={{ xs: 4 }}>
-                          <Tooltip title="Grey Market Premium (GMP): Expected listing gain per share" arrow>
+                          <Tooltip title={`Grey Market Spread: ${ipo.gmp?.range || `₹${gmpPrice}`} • Chittorgarh & Dealer Desk Verified`} arrow>
                             <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center', border: `1px solid ${gmpPrice > 0 ? '#10b98140' : '#ef444440'}` }}>
                               <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 700 }}>
                                 LIVE GMP
@@ -545,6 +553,11 @@ export const IpoPage = () => {
                               <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace', color: gmpPrice > 0 ? 'success.main' : 'error.main' }}>
                                 +₹{gmpPrice} (+{gmpPercent}%)
                               </Typography>
+                              {ipo.gmp?.range && (
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', display: 'block' }}>
+                                  ({ipo.gmp.range})
+                                </Typography>
+                              )}
                             </Box>
                           </Tooltip>
                         </Grid>

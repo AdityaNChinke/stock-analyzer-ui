@@ -26,9 +26,10 @@ export const IPOS_DATA = [
     ofsCr: 800,
     gmp: {
       price: 9,
+      range: '₹7 - ₹11',
       percent: 15.0,
       trend: 'BULLISH',
-      updatedAt: 'Live from Chittorgarh, 4:45 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 4:45 PM',
     },
     subscription: {
       qib: 0,
@@ -101,9 +102,10 @@ export const IPOS_DATA = [
     ofsCr: 400,
     gmp: {
       price: 38,
+      range: '₹35 - ₹42',
       percent: 18.9,
       trend: 'BULLISH',
-      updatedAt: 'Live from Chittorgarh, 4:30 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 4:30 PM',
     },
     subscription: {
       qib: 0,
@@ -174,9 +176,10 @@ export const IPOS_DATA = [
     ofsCr: 0,
     gmp: {
       price: 34,
+      range: '₹30 - ₹38',
       percent: 36.6,
       trend: 'HIGH_FIRE',
-      updatedAt: 'Live from Chittorgarh, 4:15 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 4:15 PM',
     },
     subscription: {
       qib: 0,
@@ -244,9 +247,10 @@ export const IPOS_DATA = [
     ofsCr: 122.14,
     gmp: {
       price: 22,
+      range: '₹18 - ₹26',
       percent: 6.1,
       trend: 'BEARISH',
-      updatedAt: 'Live from Chittorgarh, 3:45 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 3:45 PM',
     },
     subscription: {
       qib: 0,
@@ -313,9 +317,10 @@ export const IPOS_DATA = [
     ofsCr: 200,
     gmp: {
       price: 32,
+      range: '₹28 - ₹36',
       percent: 20.0,
       trend: 'BULLISH',
-      updatedAt: 'Live from Chittorgarh, 4:00 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 4:00 PM',
     },
     subscription: {
       qib: 0,
@@ -383,9 +388,10 @@ export const IPOS_DATA = [
     ofsCr: 270,
     gmp: {
       price: 165,
+      range: '₹150 - ₹175',
       percent: 33.7,
       trend: 'HIGH_FIRE',
-      updatedAt: 'Live from Chittorgarh, 4:45 PM',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk, 4:45 PM',
     },
     subscription: {
       qib: 0,
@@ -485,6 +491,85 @@ export const getIpoById = (idOrSymbol) => {
   if (!idOrSymbol) return null;
   const clean = String(idOrSymbol).toUpperCase();
   return IPOS_DATA.find((ipo) => ipo.id === clean || ipo.symbol === clean) || null;
+};
+
+/**
+ * Dynamically resolves IPO timeline status based on current calendar date
+ */
+export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
+  if (!openDateStr || !closeDateStr) {
+    return {
+      statusKey: 'UPCOMING_7_DAYS',
+      badgeText: 'Upcoming',
+      isBiddingOpen: false,
+    };
+  }
+
+  const today = new Date();
+  const openDate = new Date(openDateStr);
+  const closeDate = new Date(closeDateStr);
+
+  const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const openMs = new Date(openDate.getFullYear(), openDate.getMonth(), openDate.getDate()).getTime();
+  const closeMs = new Date(closeDate.getFullYear(), closeDate.getMonth(), closeDate.getDate()).getTime();
+
+  if (todayMs >= openMs && todayMs <= closeMs) {
+    const diffDays = Math.floor((todayMs - openMs) / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays = Math.floor((closeMs - openMs) / (1000 * 60 * 60 * 24)) + 1;
+    if (todayMs === closeMs) {
+      return {
+        statusKey: 'OPEN_NOW',
+        badgeText: '🟢 Closes Today! (Last Chance to Bid)',
+        isBiddingOpen: true,
+      };
+    }
+    return {
+      statusKey: 'OPEN_NOW',
+      badgeText: `🟢 Open For Bidding (Day ${diffDays} of ${totalDays})`,
+      isBiddingOpen: true,
+    };
+  }
+
+  if (todayMs < openMs) {
+    const daysUntilOpen = Math.round((openMs - todayMs) / (1000 * 60 * 60 * 24));
+    if (daysUntilOpen === 1) {
+      return {
+        statusKey: 'UPCOMING_7_DAYS',
+        badgeText: `🟡 Opens Tomorrow (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+        isBiddingOpen: false,
+      };
+    }
+    return {
+      statusKey: 'UPCOMING_7_DAYS',
+      badgeText: `📅 Opens in ${daysUntilOpen} Days (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+      isBiddingOpen: false,
+    };
+  }
+
+  return {
+    statusKey: 'CLOSED',
+    badgeText: '🔴 Bidding Closed (Awaiting Allotment)',
+    isBiddingOpen: false,
+  };
+};
+
+/**
+ * Returns all IPOs enriched with dynamic real-time status
+ */
+export const getEnrichedIpos = () => {
+  return IPOS_DATA.map((ipo) => {
+    if (ipo.status === 'RECENTLY_LISTED') return ipo;
+    const dynamic = getDynamicIpoStatus(ipo.openDate, ipo.closeDate);
+    return {
+      ...ipo,
+      status: dynamic.statusKey,
+      dynamicBadge: dynamic.badgeText,
+      subscription: {
+        ...ipo.subscription,
+        status: dynamic.badgeText,
+      },
+    };
+  });
 };
 
 /**

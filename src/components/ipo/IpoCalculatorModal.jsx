@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,32 +13,61 @@ import {
   Slider,
   Tooltip,
   Chip,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Calculate as CalculatorIcon,
   MonetizationOn as ProfitIcon,
-  ShieldOutlined as ShieldIcon,
+  Tune as TuneIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
-import { calculateIpoInvestment } from '../../services/ipoService';
 import { formatCurrency } from '../../utils/formatters';
 
 export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
   const [lots, setLots] = useState(1);
+  const [customGmp, setCustomGmp] = useState(ipo?.gmp?.price || 0);
+
+  useEffect(() => {
+    if (ipo) {
+      setCustomGmp(ipo.gmp?.price || 0);
+      setLots(1);
+    }
+  }, [ipo]);
 
   if (!ipo) return null;
 
+  const upperPrice = ipo.priceBand?.max || ipo.issuePrice || 100;
+  const lotSize = ipo.lotSize || 1;
+  const lotCost = upperPrice * lotSize;
+
   const maxRetailLots = useMemo(() => {
-    const upperPrice = ipo.priceBand?.max || ipo.issuePrice || 100;
-    const lotSize = ipo.lotSize || 1;
-    const lotCost = upperPrice * lotSize;
     if (lotCost >= 100000) return 1; // SME limit
     return Math.max(1, Math.floor(200000 / lotCost)); // Retail limit ₹2 Lakhs
-  }, [ipo]);
+  }, [lotCost]);
 
+  // Real-time calculation based on selected Lots and Custom/Live GMP
   const calculation = useMemo(() => {
-    return calculateIpoInvestment(ipo, lots);
-  }, [ipo, lots]);
+    const totalShares = lots * lotSize;
+    const totalInvestment = totalShares * upperPrice;
+    const activeGmp = Number(customGmp) || 0;
+    const expectedProfit = totalShares * activeGmp;
+    const estimatedListingPrice = upperPrice + activeGmp;
+    const profitPercent = upperPrice > 0 ? ((activeGmp / upperPrice) * 100).toFixed(1) : '0.0';
+
+    return {
+      pricePerShare: upperPrice,
+      lotSize,
+      lots,
+      totalShares,
+      totalInvestment,
+      activeGmp,
+      estimatedListingPrice,
+      expectedProfit,
+      profitPercent,
+    };
+  }, [lots, lotSize, upperPrice, customGmp]);
 
   const isProfit = calculation.expectedProfit >= 0;
 
@@ -60,7 +89,7 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CalculatorIcon color="primary" />
           <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            IPO Listing Profit Calculator
+            IPO Listing Profit & GMP Calculator
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small">
@@ -75,9 +104,54 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
             {ipo.companyName} ({ipo.symbol})
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Price: <strong>₹{calculation.pricePerShare}</strong> • 1 Lot = <strong>{calculation.lotSize} Shares</strong> • Live GMP: <strong style={{ color: '#10b981' }}>+₹{ipo.gmp?.price || 0} ({ipo.gmp?.percent || 0}%)</strong>
+            Price Band: <strong>₹{upperPrice}</strong> • 1 Lot = <strong>{lotSize} Shares</strong> • Chittorgarh Range: <strong style={{ color: '#10b981' }}>{ipo.gmp?.range || `₹${ipo.gmp?.price || 0}`}</strong>
           </Typography>
         </Box>
+
+        {/* 🎛️ INTERACTIVE LIVE GMP ADJUSTER */}
+        <Paper sx={{ p: 2, mb: 2.5, borderRadius: 2, bgcolor: 'background.subtle', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+              <TuneIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                Adjust Live GMP (₹ per Share):
+              </Typography>
+            </Box>
+            <Chip
+              label={`Listing @ ₹${calculation.estimatedListingPrice} (+${calculation.profitPercent}%)`}
+              size="small"
+              sx={{ fontWeight: 800, fontSize: '0.7rem', bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}
+            />
+          </Box>
+
+          <Grid container spacing={1.5} alignItems="center">
+            <Grid item size={{ xs: 7 }}>
+              <Slider
+                value={Number(customGmp) || 0}
+                min={0}
+                max={Math.max(100, (ipo.gmp?.price || 50) * 2.5)}
+                step={1}
+                onChange={(_, val) => setCustomGmp(val)}
+                sx={{ color: '#10b981' }}
+              />
+            </Grid>
+            <Grid item size={{ xs: 5 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                value={customGmp}
+                onChange={(e) => setCustomGmp(Math.max(0, Number(e.target.value)))}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                }}
+                sx={{
+                  '& input': { fontWeight: 800, fontFamily: 'monospace', textAlign: 'center' },
+                }}
+              />
+            </Grid>
+          </Grid>
+        </Paper>
 
         {/* Lots Slider & Quick Buttons */}
         <Paper sx={{ p: 2.5, mb: 3, borderRadius: 2, bgcolor: 'background.subtle' }}>
@@ -180,41 +254,34 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
           />
         </Paper>
 
-        {/* Breakdown Grid */}
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 6 }}>
-            <Paper sx={{ p: 2, borderRadius: 2, bgcolor: 'background.subtle', height: '100%' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                TOTAL CAPITAL REQUIRED
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'monospace', mt: 0.5 }}>
-                {formatCurrency(calculation.totalCapital)}
-              </Typography>
+        {/* Investment Details Grid */}
+        <Grid container spacing={1.5}>
+          <Grid item size={{ xs: 6 }}>
+            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center' }}>
               <Typography variant="caption" color="text.secondary">
-                Blocked via ASBA / UPI
+                Total Capital Blocked (UPI)
               </Typography>
-            </Paper>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
+                {formatCurrency(calculation.totalInvestment)}
+              </Typography>
+            </Box>
           </Grid>
-
-          <Grid size={{ xs: 6 }}>
-            <Paper sx={{ p: 2, borderRadius: 2, bgcolor: 'background.subtle', height: '100%' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                ESTIMATED TOTAL VALUE
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'monospace', mt: 0.5, color: 'primary.main' }}>
-                {formatCurrency(calculation.totalCapital + calculation.expectedProfit)}
-              </Typography>
+          <Grid item size={{ xs: 6 }}>
+            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.subtle', textAlign: 'center' }}>
               <Typography variant="caption" color="text.secondary">
-                At Est. ₹{calculation.estimatedListingPrice} Listing
+                Projected Total Listing Value
               </Typography>
-            </Paper>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, fontFamily: 'monospace', color: 'success.main' }}>
+                {formatCurrency(calculation.totalInvestment + calculation.expectedProfit)}
+              </Typography>
+            </Box>
           </Grid>
         </Grid>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} variant="contained" fullWidth sx={{ fontWeight: 700, textTransform: 'none' }}>
-          Done
+      <DialogActions sx={{ p: 2.5 }}>
+        <Button onClick={onClose} variant="contained" fullWidth sx={{ fontWeight: 700, textTransform: 'none', py: 1.2, borderRadius: 2 }}>
+          Close Calculator
         </Button>
       </DialogActions>
     </Dialog>
