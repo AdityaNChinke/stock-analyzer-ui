@@ -67,7 +67,31 @@ const getDefaultPortfolio = () => ({
 
 export const getPortfolio = () => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    let data = localStorage.getItem(STORAGE_KEY);
+    if (!data) {
+      const legacyKeys = [
+        'stock_analyzer_paper_portfolio',
+        'stock_analyzer_portfolio',
+        'stock_analyzer_virtual_portfolio',
+        'paper_portfolio',
+        'virtual_portfolio',
+        'portfolio',
+      ];
+      for (const k of legacyKeys) {
+        const legacyData = localStorage.getItem(k);
+        if (legacyData) {
+          try {
+            const parsed = JSON.parse(legacyData);
+            if (parsed && (parsed.positions || parsed.cashBalance)) {
+              data = legacyData;
+              localStorage.setItem(STORAGE_KEY, data);
+              break;
+            }
+          } catch {}
+        }
+      }
+    }
+
     if (!data) {
       const def = getDefaultPortfolio();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(def));

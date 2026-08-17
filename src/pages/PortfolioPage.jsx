@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   Table,
-  TableBody,
   TableCell,
   TableContainer,
   TableHead,
@@ -17,6 +16,7 @@ import {
   IconButton,
   Tooltip,
   Divider,
+  TableBody,
 } from '@mui/material';
 import {
   AccountBalanceWallet as WalletIcon,
@@ -28,10 +28,12 @@ import {
   CheckCircle as WinIcon,
   Cancel as LossIcon,
   ArrowForward as ArrowForwardIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { getPortfolio, sellStock, resetPortfolio, computePortfolioSummary } from '../services/paperTradingService';
 import { getLiveIndianStocks } from '../services/yahooFinanceService';
+import TradeModal from '../components/portfolio/TradeModal';
 import PageHeader from '../components/common/PageHeader';
 import StatCard from '../components/dashboard/StatCard';
 import { formatCurrency } from '../utils/formatters';
@@ -41,6 +43,7 @@ export const PortfolioPage = () => {
   const navigate = useNavigate();
   const [summary, setSummary] = useState(() => computePortfolioSummary(getPortfolio()));
   const [loading, setLoading] = useState(false);
+  const [tradeModalStock, setTradeModalStock] = useState(null);
 
   const refreshLiveMetrics = useCallback(async () => {
     setLoading(true);
@@ -96,7 +99,25 @@ export const PortfolioPage = () => {
         onRefresh={refreshLiveMetrics}
         refreshing={loading}
         actions={
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() =>
+                setTradeModalStock({
+                  symbol: 'TRENT',
+                  companyName: 'Trent Limited (Zudio)',
+                  currentPrice: 2978.00,
+                  targetPrice: 3275.00,
+                  stopLoss: 2844.00,
+                })
+              }
+              sx={{ textTransform: 'none', fontWeight: 800, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
+            >
+              ➕ Quick Buy Stock
+            </Button>
             <Tooltip title="Reset your paper trading balance back to the starting amount of ₹1,00,000 cash" arrow>
               <Button
                 variant="outlined"
@@ -123,6 +144,13 @@ export const PortfolioPage = () => {
             </Tooltip>
           </Box>
         }
+      />
+
+      <TradeModal
+        open={!!tradeModalStock}
+        onClose={() => setTradeModalStock(null)}
+        stock={tradeModalStock}
+        onTradeSuccess={refreshLiveMetrics}
       />
 
       {/* KPI Cards */}
