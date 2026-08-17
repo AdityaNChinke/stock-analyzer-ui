@@ -70,6 +70,33 @@ export const NSE_STOCKS = [
   { symbol: 'ZOMATO', yfSymbol: 'ZOMATO.NS', companyName: 'Zomato Limited (Eternal / Blinkit)', sector: 'Consumer Internet', exchange: 'NSE', basePrice: 318.00 },
   { symbol: 'ADANIENT', yfSymbol: 'ADANIENT.NS', companyName: 'Adani Enterprises Limited', sector: 'Conglomerate & Infra', exchange: 'NSE', basePrice: 3040.00 },
   { symbol: 'ADANIPORTS', yfSymbol: 'ADANIPORTS.NS', companyName: 'Adani Ports & SEZ Ltd.', sector: 'Ports & Infrastructure', exchange: 'NSE', basePrice: 1460.00 },
+
+  // 9. NIFTY Midcap High-Growth Universe
+  { symbol: 'DIXON', yfSymbol: 'DIXON.NS', companyName: 'Dixon Technologies (India) Ltd.', sector: 'Electronics & Hardware', exchange: 'NSE', basePrice: 14850.00 },
+  { symbol: 'POLYCAB', yfSymbol: 'POLYCAB.NS', companyName: 'Polycab India Limited', sector: 'Cables & Electricals', exchange: 'NSE', basePrice: 6890.00 },
+  { symbol: 'CDSL', yfSymbol: 'CDSL.NS', companyName: 'Central Depository Services Ltd.', sector: 'Capital Markets & Fintech', exchange: 'NSE', basePrice: 1845.00 },
+  { symbol: 'BSE', yfSymbol: 'BSE.NS', companyName: 'BSE Limited', sector: 'Capital Markets & Exchanges', exchange: 'NSE', basePrice: 4890.00 },
+  { symbol: 'HAL', yfSymbol: 'HAL.NS', companyName: 'Hindustan Aeronautics Limited', sector: 'Defense & Aerospace', exchange: 'NSE', basePrice: 4620.00 },
+  { symbol: 'BEL', yfSymbol: 'BEL.NS', companyName: 'Bharat Electronics Limited', sector: 'Defense & Electronics', exchange: 'NSE', basePrice: 312.50 },
+  { symbol: 'PERSISTENT', yfSymbol: 'PERSISTENT.NS', companyName: 'Persistent Systems Limited', sector: 'IT & Digital Engineering', exchange: 'NSE', basePrice: 5780.00 },
+  { symbol: 'KPITTECH', yfSymbol: 'KPITTECH.NS', companyName: 'KPIT Technologies Limited', sector: 'Automotive Software & EV', exchange: 'NSE', basePrice: 1640.00 },
+  { symbol: 'COFORGE', yfSymbol: 'COFORGE.NS', companyName: 'Coforge Limited', sector: 'IT & Cloud Solutions', exchange: 'NSE', basePrice: 8120.00 },
+  { symbol: 'KALYANKJIL', yfSymbol: 'KALYANKJIL.NS', companyName: 'Kalyan Jewellers India Ltd.', sector: 'Retail & Consumer Goods', exchange: 'NSE', basePrice: 695.00 },
+  { symbol: 'CUMMINSIND', yfSymbol: 'CUMMINSIND.NS', companyName: 'Cummins India Limited', sector: 'Heavy Electrical Equipment', exchange: 'NSE', basePrice: 3820.00 },
+  { symbol: 'SUZLON', yfSymbol: 'SUZLON.NS', companyName: 'Suzlon Energy Limited', sector: 'Renewable Power & Wind', exchange: 'NSE', basePrice: 68.40 },
+  { symbol: 'KEI', yfSymbol: 'KEI.NS', companyName: 'KEI Industries Limited', sector: 'Cables & Power Infra', exchange: 'NSE', basePrice: 4250.00 },
+  { symbol: 'MAXHEALTH', yfSymbol: 'MAXHEALTH.NS', companyName: 'Max Healthcare Institute Ltd.', sector: 'Healthcare & Hospitals', exchange: 'NSE', basePrice: 985.00 },
+  { symbol: 'TATACOMM', yfSymbol: 'TATACOMM.NS', companyName: 'Tata Communications Limited', sector: 'Telecommunications & Cloud', exchange: 'NSE', basePrice: 1940.00 },
+  { symbol: 'FEDERALBNK', yfSymbol: 'FEDERALBNK.NS', companyName: 'The Federal Bank Limited', sector: 'Banking & Financials', exchange: 'NSE', basePrice: 204.50 },
+  { symbol: 'IDFCFIRSTB', yfSymbol: 'IDFCFIRSTB.NS', companyName: 'IDFC First Bank Limited', sector: 'Banking & Financials', exchange: 'NSE', basePrice: 78.90 },
+  { symbol: 'APOLLOTYRE', yfSymbol: 'APOLLOTYRE.NS', companyName: 'Apollo Tyres Limited', sector: 'Automobile Ancillaries', exchange: 'NSE', basePrice: 512.00 },
+  { symbol: 'VOLTAS', yfSymbol: 'VOLTAS.NS', companyName: 'Voltas Limited (Tata)', sector: 'Consumer Electronics & HVAC', exchange: 'NSE', basePrice: 1720.00 },
+  { symbol: 'ASTRAL', yfSymbol: 'ASTRAL.NS', companyName: 'Astral Limited', sector: 'Building Materials & Pipes', exchange: 'NSE', basePrice: 1980.00 },
+  { symbol: 'PRESTIGE', yfSymbol: 'PRESTIGE.NS', companyName: 'Prestige Estates Projects Ltd.', sector: 'Real Estate & Infrastructure', exchange: 'NSE', basePrice: 1820.00 },
+  { symbol: 'OBEROIRLTY', yfSymbol: 'OBEROIRLTY.NS', companyName: 'Oberoi Realty Limited', sector: 'Real Estate & Infrastructure', exchange: 'NSE', basePrice: 1980.00 },
+  { symbol: 'AUROPHARMA', yfSymbol: 'AUROPHARMA.NS', companyName: 'Aurobindo Pharma Limited', sector: 'Pharmaceuticals & Generics', exchange: 'NSE', basePrice: 1480.00 },
+  { symbol: 'LUPIN', yfSymbol: 'LUPIN.NS', companyName: 'Lupin Limited', sector: 'Pharmaceuticals & Biotech', exchange: 'NSE', basePrice: 2180.00 },
+  { symbol: 'JUBLFOOD', yfSymbol: 'JUBLFOOD.NS', companyName: 'Jubilant FoodWorks Ltd.', sector: 'Quick Service Restaurants', exchange: 'NSE', basePrice: 642.00 },
 ];
 
 const cache = new Map();

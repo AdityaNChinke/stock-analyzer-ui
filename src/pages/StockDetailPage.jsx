@@ -28,6 +28,7 @@ import ErrorComponent from '../components/common/ErrorComponent';
 import StatusChip from '../components/common/StatusChip';
 import TradeModal from '../components/portfolio/TradeModal';
 import { dispatchTradeAlert } from '../services/telegramService';
+import { getCachedMidcapBreakouts, NSE_MIDCAP_STOCKS } from '../services/midcapBreakoutService';
 import { formatCurrency } from '../utils/formatters';
 import { ROUTES } from '../utils/constants';
 
@@ -37,13 +38,23 @@ export const StockDetailPage = () => {
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [alertStatus, setAlertStatus] = useState('');
 
-  const { stockInfo, prices, indicators, loading, error, refetch } = useStockDetails(symbol);
+  const { stockInfo, prices, indicators, recommendation, loading, error, refetch } = useStockDetails(symbol);
 
   const displaySymbol = (symbol || 'UNKNOWN').toUpperCase();
-  const companyName = stockInfo?.companyName || indicators?.companyName || `${displaySymbol} Corporation`;
-  const sector = stockInfo?.sector || indicators?.sector || 'Equities';
+  const companyName = recommendation?.companyName || stockInfo?.companyName || indicators?.companyName || `${displaySymbol} Corporation`;
+  const sector = recommendation?.sector || stockInfo?.sector || indicators?.sector || 'Equities';
   const safePrices = Array.isArray(prices) ? prices : [];
-  const currentPrice = indicators?.currentPrice || stockInfo?.price || (safePrices.length ? safePrices[safePrices.length - 1].close : 0);
+  const currentPrice = recommendation?.currentPrice || indicators?.currentPrice || stockInfo?.price || (safePrices.length ? safePrices[safePrices.length - 1].close : 0);
+
+  // Exact 100% synchronized setup parameters from recommendation cards:
+  const targetPrice = recommendation?.targetPrice || Number((currentPrice * 1.10).toFixed(2));
+  const stopLoss = recommendation?.stopLoss || Number((currentPrice * 0.955).toFixed(2));
+  const expectedHolding = recommendation?.expectedHolding || recommendation?.holdingPeriod || recommendation?.holding || indicators?.expectedHolding || '6 to 14 Days';
+  const confidenceScore = recommendation?.confidenceScore || recommendation?.score || indicators?.confidenceScore || 90;
+
+  const gainPercent = currentPrice > 0 ? Number((((targetPrice - currentPrice) / currentPrice) * 100).toFixed(1)) : 10.0;
+  const lossPercent = currentPrice > 0 ? Number((((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1)) : 4.5;
+  const trailingTrigger = Number((currentPrice * 1.045).toFixed(2));
 
   const atrVal = indicators?.atr || Number((currentPrice * 0.022).toFixed(2));
   const sma200Val = indicators?.sma200 || Number((currentPrice * 0.93).toFixed(2));
@@ -289,10 +300,16 @@ export const StockDetailPage = () => {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, lineHeight: 1.7 }}>
-              Key indicators for <strong>{displaySymbol}</strong> show a {overallSignal.toLowerCase()} setup.
-              The EMA20 ({formatCurrency(indicators?.ema20)}) remains {indicators?.ema20 > indicators?.ema50 ? 'above' : 'below'} the EMA50 ({formatCurrency(indicators?.ema50)}),
-              with an RSI reading of {indicators?.rsi?.toFixed?.(1) || 50} (
-              {indicators?.rsi > 70 ? 'Overbought zone' : indicators?.rsi < 30 ? 'Oversold opportunity' : 'Healthy momentum accumulation'}).
+              {recommendation?.reason || recommendation?.catalyst ? (
+                <span>{recommendation.reason || recommendation.catalyst}</span>
+              ) : (
+                <span>
+                  Key indicators for <strong>{displaySymbol}</strong> show a {overallSignal.toLowerCase()} setup.
+                  The EMA20 ({formatCurrency(indicators?.ema20)}) remains {indicators?.ema20 > indicators?.ema50 ? 'above' : 'below'} the EMA50 ({formatCurrency(indicators?.ema50)}),
+                  with an RSI reading of {indicators?.rsi?.toFixed?.(1) || 50} (
+                  {indicators?.rsi > 70 ? 'Overbought zone' : indicators?.rsi < 30 ? 'Oversold opportunity' : 'Healthy momentum accumulation'}).
+                </span>
+              )}
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -325,7 +342,7 @@ export const StockDetailPage = () => {
                 </Typography>
               </Box>
               <Chip
-                label={`⏱️ Expected Hold: ${indicators?.expectedHolding || '6 to 14 Days'}`}
+                label={`⏱️ Expected Hold: ${expectedHolding}`}
                 size="small"
                 sx={{
                   fontWeight: 800,
@@ -341,20 +358,20 @@ export const StockDetailPage = () => {
               <Grid size={{ xs: 6 }}>
                 <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.subtle', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    🛑 STOP LOSS (1.5x ATR)
+                    🛑 STOP LOSS (-{lossPercent}%)
                   </Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, fontFamily: 'monospace', color: 'error.main' }}>
-                    {formatCurrency(indicators?.supportLevel || currentPrice * 0.955)}
+                    {formatCurrency(stopLoss)}
                   </Typography>
                 </Box>
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.subtle', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    🎯 TARGET (3.0x ATR)
+                    🎯 TARGET (+{gainPercent}%)
                   </Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, fontFamily: 'monospace', color: 'success.main' }}>
-                    {formatCurrency(indicators?.resistanceLevel || currentPrice * 1.10)}
+                    {formatCurrency(targetPrice)}
                   </Typography>
                 </Box>
               </Grid>
@@ -368,25 +385,25 @@ export const StockDetailPage = () => {
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <span>🎯</span>
                 <Typography variant="caption" sx={{ lineHeight: 1.5 }}>
-                  <strong>Profit Taking:</strong> Sell 75% to 100% position when price reaches <strong>{formatCurrency(indicators?.resistanceLevel || currentPrice * 1.10)}</strong>.
+                  <strong>Profit Taking:</strong> Sell 75% to 100% position when price reaches <strong>{formatCurrency(targetPrice)} (+{gainPercent}%)</strong>.
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <span>🛑</span>
                 <Typography variant="caption" sx={{ lineHeight: 1.5 }}>
-                  <strong>Capital Protection:</strong> Exit 100% immediately if daily candle closes below <strong>{formatCurrency(indicators?.supportLevel || currentPrice * 0.955)}</strong>.
+                  <strong>Capital Protection:</strong> Exit 100% immediately if daily candle closes below <strong>{formatCurrency(stopLoss)} (-{lossPercent}%)</strong>.
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <span>📈</span>
                 <Typography variant="caption" sx={{ lineHeight: 1.5 }}>
-                  <strong>Trailing Stop Rule:</strong> Once price gains +4.5% (crosses {formatCurrency(currentPrice * 1.045)}), move your Stop Loss up to Entry ({formatCurrency(currentPrice)}) for a risk-free trade.
+                  <strong>Trailing Stop Rule:</strong> Once price gains +4.5% (crosses {formatCurrency(trailingTrigger)}), move your Stop Loss up to Entry ({formatCurrency(currentPrice)}) for a risk-free trade.
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <span>⏳</span>
                 <Typography variant="caption" sx={{ lineHeight: 1.5 }}>
-                  <strong>Time-Stop:</strong> If target is not reached within <strong>{indicators?.holdingDaysMax || 14} trading days</strong>, exit at market price to rotate capital.
+                  <strong>Time-Stop:</strong> If target is not reached within <strong>{expectedHolding}</strong>, exit at market price to rotate capital.
                 </Typography>
               </Box>
             </Box>
@@ -402,8 +419,8 @@ export const StockDetailPage = () => {
           symbol: displaySymbol,
           companyName,
           currentPrice,
-          targetPrice: indicators?.resistanceLevel,
-          stopLoss: indicators?.supportLevel,
+          targetPrice,
+          stopLoss,
         }}
         onTradeSuccess={() => {
           // Success callback
