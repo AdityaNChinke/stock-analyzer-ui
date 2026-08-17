@@ -55,7 +55,7 @@ export const TodayRecommendationsPage = () => {
   const [isMidcapScanning, setIsMidcapScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState(getDailySwingSyncStatus());
   const [scanMessage, setScanMessage] = useState('');
-  const [selectedUniverse, setSelectedUniverse] = useState('ALL'); // 'ALL' | 'LARGE_CAP' | 'MIDCAP'
+  const [selectedUniverse, setSelectedUniverse] = useState('LARGE_CAP'); // Default always to Top 5 Largecap tab
   const [midcapPicks, setMidcapPicks] = useState(getCachedMidcapBreakouts());
 
   const {
@@ -244,14 +244,8 @@ export const TodayRecommendationsPage = () => {
           sx={{ px: 2, bgcolor: 'background.paper' }}
         >
           <Tab
-            value="ALL"
-            label="🌟 All Setups (Largecap + Midcap)"
-            iconPosition="start"
-            sx={{ fontWeight: 800, textTransform: 'none', fontSize: '0.9rem' }}
-          />
-          <Tab
             value="LARGE_CAP"
-            label={`🏛️ NIFTY 50 Largecaps (${top5Picks.length})`}
+            label={`🏆 Top 5 Largecap Swing Picks (${top5Picks.length})`}
             iconPosition="start"
             sx={{ fontWeight: 800, textTransform: 'none', fontSize: '0.9rem' }}
           />
@@ -260,6 +254,12 @@ export const TodayRecommendationsPage = () => {
             label={`🚀 Midcap Momentum Breakouts (${midcapPicks.length})`}
             iconPosition="start"
             sx={{ fontWeight: 800, textTransform: 'none', fontSize: '0.9rem', color: '#38bdf8' }}
+          />
+          <Tab
+            value="ALL"
+            label={`🌟 All Combined Setups (${top5Picks.length + midcapPicks.length})`}
+            iconPosition="start"
+            sx={{ fontWeight: 800, textTransform: 'none', fontSize: '0.9rem' }}
           />
         </Tabs>
       </Paper>
