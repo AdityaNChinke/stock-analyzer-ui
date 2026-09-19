@@ -556,8 +556,24 @@ export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
 /**
  * Returns all IPOs enriched with dynamic real-time status
  */
-export const getEnrichedIpos = () => {
-  return IPOS_DATA.map((ipo) => {
+export const getEnrichedIpos = (customList = null) => {
+  let list = customList;
+  if (!list && typeof localStorage !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('stock_analyzer_weekly_ipos');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          list = parsed;
+        }
+      }
+    } catch {
+      // Fallback to IPOS_DATA
+    }
+  }
+  if (!list) list = IPOS_DATA;
+
+  return list.map((ipo) => {
     if (ipo.status === 'RECENTLY_LISTED') return ipo;
     const dynamic = getDynamicIpoStatus(ipo.openDate, ipo.closeDate);
     return {

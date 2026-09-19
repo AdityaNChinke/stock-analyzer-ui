@@ -35,6 +35,9 @@ function AppContent({ mode, toggleTheme }) {
           <Route path={ROUTES.RECOMMENDATIONS} element={<RecommendationPage />} />
           <Route path={ROUTES.TODAY_RECOMMENDATIONS} element={<TodayRecommendationsPage />} />
           <Route path={ROUTES.IPOS} element={<IpoPage />} />
+          <Route path="/ipo" element={<Navigate to={ROUTES.IPOS} replace />} />
+          <Route path="/stock" element={<Navigate to={ROUTES.STOCKS} replace />} />
+          <Route path="/recommendation" element={<Navigate to={ROUTES.RECOMMENDATIONS} replace />} />
           <Route path={ROUTES.PORTFOLIO} element={<PortfolioPage />} />
           <Route path={ROUTES.PERFORMANCE} element={<PerformancePage />} />
           <Route path="*" element={<NotFoundPage />} />
