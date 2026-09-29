@@ -115,26 +115,41 @@ function parseChittorgarhDates(str, fallbackYear = 2026) {
   const yearMatch = clean.match(/\b(202\d)\b/);
   const year = yearMatch ? yearMatch[1] : String(fallbackYear);
 
-  const m1 = clean.match(/(\d{1,2})\s*(?:-|to)\s*(\d{1,2})\s*([A-Za-z]{3})/i);
-  if (m1) {
-    const startDay = m1[1].padStart(2, '0');
-    const endDay = m1[2].padStart(2, '0');
-    const month = MONTH_MAP[m1[3].toLowerCase()] || '09';
+  // Format 1: 'Sep 30, 2026 to Oct 5, 2026' or 'Sep 28 to Sep 30'
+  const mMonthFirst = clean.match(/([A-Za-z]{3,9})\s*(\d{1,2})(?:[^\w]+(?:202\d))?\s*(?:to|-)\s*([A-Za-z]{3,9})?\s*(\d{1,2})/i);
+  if (mMonthFirst) {
+    const startMonth = MONTH_MAP[mMonthFirst[1].slice(0, 3).toLowerCase()] || '09';
+    const startDay = mMonthFirst[2].padStart(2, '0');
+    const endMonth = mMonthFirst[3] ? (MONTH_MAP[mMonthFirst[3].slice(0, 3).toLowerCase()] || startMonth) : startMonth;
+    const endDay = mMonthFirst[4].padStart(2, '0');
     return {
-      openDate: `${year}-${month}-${startDay}`,
-      closeDate: `${year}-${month}-${endDay}`
+      openDate: `${year}-${startMonth}-${startDay}`,
+      closeDate: `${year}-${endMonth}-${endDay}`,
     };
   }
 
-  const m2 = clean.match(/(\d{1,2})\s*([A-Za-z]{3})\s*(?:-|to)\s*(\d{1,2})\s*([A-Za-z]{3})/i);
+  // Format 2: '30 Sep - 05 Oct' or '30 Sep 2026 to 05 Oct 2026'
+  const m2 = clean.match(/(\d{1,2})\s*([A-Za-z]{3,9})\s*(?:-|to)\s*(\d{1,2})\s*([A-Za-z]{3,9})/i);
   if (m2) {
     const startDay = m2[1].padStart(2, '0');
-    const startMonth = MONTH_MAP[m2[2].toLowerCase()] || '09';
+    const startMonth = MONTH_MAP[m2[2].slice(0, 3).toLowerCase()] || '09';
     const endDay = m2[3].padStart(2, '0');
-    const endMonth = MONTH_MAP[m2[4].toLowerCase()] || '09';
+    const endMonth = MONTH_MAP[m2[4].slice(0, 3).toLowerCase()] || '09';
     return {
       openDate: `${year}-${startMonth}-${startDay}`,
-      closeDate: `${year}-${endMonth}-${endDay}`
+      closeDate: `${year}-${endMonth}-${endDay}`,
+    };
+  }
+
+  // Format 3: '28 - 30 Sep'
+  const m1 = clean.match(/(\d{1,2})\s*(?:-|to)\s*(\d{1,2})\s*([A-Za-z]{3,9})/i);
+  if (m1) {
+    const startDay = m1[1].padStart(2, '0');
+    const endDay = m1[2].padStart(2, '0');
+    const month = MONTH_MAP[m1[3].slice(0, 3).toLowerCase()] || '09';
+    return {
+      openDate: `${year}-${month}-${startDay}`,
+      closeDate: `${year}-${month}-${endDay}`,
     };
   }
 
@@ -342,7 +357,20 @@ export const autoScrapeChittorgarh = async () => {
   let analyzedIpos = [];
 
   if (scrapedCandidates.length > 0) {
-    const topCandidates = scrapedCandidates.slice(0, 10);
+    const today = new Date();
+    const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+    // Filter candidates: only keep active (open today or closing today/later) or upcoming IPOs
+    // Exclude IPOs whose bidding already closed prior to today!
+    const activeCandidates = scrapedCandidates.filter((item) => {
+      const dates = parseChittorgarhDates(item.rawDates);
+      if (!dates) return true;
+      const closeParts = dates.closeDate.split('-').map(Number);
+      const closeMs = new Date(closeParts[0], closeParts[1] - 1, closeParts[2]).getTime();
+      return closeMs >= todayMs;
+    });
+
+    const topCandidates = activeCandidates.length > 0 ? activeCandidates.slice(0, 10) : scrapedCandidates.slice(0, 8);
 
     const detailedList = await Promise.all(
       topCandidates.map(async (item) => {
@@ -361,9 +389,10 @@ export const autoScrapeChittorgarh = async () => {
           const t0 = parseTableToMap(tables[0] || '');
           const t1 = parseTableToMap(tables[1] || '');
 
-          const parsedDates = parseChittorgarhDates(t0['IPO Date'] || item.rawDates);
-          const openDate = parsedDates?.openDate || '2026-09-30';
-          const closeDate = parsedDates?.closeDate || '2026-10-05';
+          const parsedDates = parseChittorgarhDates(t0['IPO Date']) || parseChittorgarhDates(item.rawDates);
+          const todayStr = new Date().toISOString().split('T')[0];
+          const openDate = parsedDates?.openDate || todayStr;
+          const closeDate = parsedDates?.closeDate || todayStr;
 
           // Accurate Price Band Parsing
           const priceBand = parsePriceBand(t0['Price Band'] || t0['Issue Price']);

@@ -649,15 +649,22 @@ export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
 
   if (todayMs < openMs) {
     const daysUntilOpen = Math.round((openMs - todayMs) / (1000 * 60 * 60 * 24));
-    if (daysUntilOpen === 1) {
+    if (daysUntilOpen <= 7) {
+      if (daysUntilOpen === 1) {
+        return {
+          statusKey: 'UPCOMING_7_DAYS',
+          badgeText: `🟡 Opens Tomorrow (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+          isBiddingOpen: false,
+        };
+      }
       return {
         statusKey: 'UPCOMING_7_DAYS',
-        badgeText: `🟡 Opens Tomorrow (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+        badgeText: `📅 Opens in ${daysUntilOpen} Days (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
         isBiddingOpen: false,
       };
     }
     return {
-      statusKey: 'UPCOMING_7_DAYS',
+      statusKey: 'UPCOMING_LATER',
       badgeText: `📅 Opens in ${daysUntilOpen} Days (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
       isBiddingOpen: false,
     };
