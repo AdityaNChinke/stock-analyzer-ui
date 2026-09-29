@@ -61,8 +61,8 @@ export const isDailySwingScanDue = () => {
  * Executes Automated Live Market Scrape & Quantitative Swing Analysis
  */
 export const autoScrapeSwingSetups = async () => {
-  // 1. Fetch live daily candlestick histories in parallel
-  const scanCandidates = NSE_STOCKS.slice(0, 15); // Top liquid NIFTY swing candidates
+  // 1. Fetch live daily candlestick histories across liquid NIFTY Largecap universe
+  const scanCandidates = NSE_STOCKS;
 
   const analyzedPicks = await Promise.all(
     scanCandidates.map(async (stock) => {
@@ -127,21 +127,38 @@ export const autoScrapeSwingSetups = async () => {
         const stopLoss = Number((currentPrice - 1.5 * atr).toFixed(2));
         const targetPrice = Number((currentPrice + 3.0 * atr).toFixed(2));
         const riskReward = ((targetPrice - currentPrice) / (currentPrice - stopLoss)).toFixed(2);
+        const upsidePercent = `+${(((targetPrice - currentPrice) / currentPrice) * 100).toFixed(1)}%`;
+        const downsidePercent = `-${(((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1)}%`;
+        const expectedHolding = indicators.expectedHolding || '6 to 12 Trading Days';
 
         return {
           id: stock.symbol,
           symbol: stock.symbol,
+          stock: stock.symbol,
           companyName: stock.companyName,
           sector: stock.sector,
           exchange: 'NSE',
           recommendation: 'BUY',
           confidenceScore: totalScore,
+          swingScore: totalScore,
           currentPrice,
           targetPrice,
           stopLoss,
+          upsidePercent,
+          downsidePercent,
           riskRewardRatio: `${riskReward}:1`,
-          holdingPeriod: '6 to 12 Trading Days',
+          holdingPeriod: expectedHolding,
+          expectedHolding,
+          holdingDays: expectedHolding,
+          sellRules: indicators.sellRules || {
+            expectedHolding,
+            targetExit: `Sell 75% to 100% position at Target ₹${targetPrice.toFixed(2)} (${upsidePercent})`,
+            stopLossExit: `Exit 100% immediately if daily close drops below Stop Loss ₹${stopLoss.toFixed(2)} (${downsidePercent})`,
+            trailingStopRule: `Once price reaches +4.5%, move Stop Loss to Entry (₹${currentPrice.toFixed(2)}) for risk-free trade.`,
+            timeStopRule: `Exit trade at market price if neither Target nor Stop is hit within holding window.`,
+          },
           setupPattern,
+          setupType: setupPattern,
           rsi: rsi14,
           ema20,
           ema50,
@@ -152,20 +169,29 @@ export const autoScrapeSwingSetups = async () => {
       } catch {
         // Fallback for this single stock
         const currentPrice = stock.basePrice;
+        const targetPrice = Number((currentPrice * 1.10).toFixed(2));
+        const stopLoss = Number((currentPrice * 0.955).toFixed(2));
         return {
           id: stock.symbol,
           symbol: stock.symbol,
+          stock: stock.symbol,
           companyName: stock.companyName,
           sector: stock.sector,
           exchange: 'NSE',
           recommendation: 'BUY',
           confidenceScore: 88,
+          swingScore: 88,
           currentPrice,
-          targetPrice: Number((currentPrice * 1.10).toFixed(2)),
-          stopLoss: Number((currentPrice * 0.955).toFixed(2)),
+          targetPrice,
+          stopLoss,
+          upsidePercent: '+10.0%',
+          downsidePercent: '-4.5%',
           riskRewardRatio: '2.22:1',
           holdingPeriod: '6 to 12 Trading Days',
+          expectedHolding: '6 to 12 Trading Days',
+          holdingDays: '6 to 12 Trading Days',
           setupPattern: 'EMA20 Pullback Support Bounce',
+          setupType: 'EMA20 Pullback Support Bounce',
           rsi: 54.0,
           reason: 'Solid 20-day trend support with favorable 2.22:1 risk-to-reward ratio.',
           date: new Date().toISOString().split('T')[0],
@@ -177,7 +203,11 @@ export const autoScrapeSwingSetups = async () => {
 
   // Sort by highest confidence score and pick Top 5
   analyzedPicks.sort((a, b) => b.confidenceScore - a.confidenceScore);
-  const top5 = analyzedPicks.slice(0, 5).map((p, idx) => ({ ...p, rank: idx + 1 }));
+  const top5 = analyzedPicks.slice(0, 5).map((p, idx) => ({
+    ...p,
+    rank: idx + 1,
+    rankBadge: `#${idx + 1} Best Largecap Pick`,
+  }));
 
   // Save to persistent local storage
   const syncTime = new Date().toISOString();

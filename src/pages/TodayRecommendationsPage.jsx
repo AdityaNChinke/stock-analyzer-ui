@@ -57,6 +57,18 @@ export const TodayRecommendationsPage = () => {
   const [scanMessage, setScanMessage] = useState('');
   const [selectedUniverse, setSelectedUniverse] = useState('LARGE_CAP'); // Default always to Top 5 Largecap tab
   const [midcapPicks, setMidcapPicks] = useState(getCachedMidcapBreakouts());
+  const [largecapPicks, setLargecapPicks] = useState(() => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('stock_analyzer_daily_swing_picks');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return null;
+  });
 
   const {
     recommendations = [],
@@ -66,8 +78,11 @@ export const TodayRecommendationsPage = () => {
   } = useRecommendations(true);
 
   useEffect(() => {
-    const cleanup = initDailySwingScheduler(() => {
+    const cleanup = initDailySwingScheduler((syncedTop5) => {
       setScanStatus(getDailySwingSyncStatus());
+      if (syncedTop5 && syncedTop5.length > 0) {
+        setLargecapPicks(syncedTop5);
+      }
       refetch();
     });
     return cleanup;
@@ -77,8 +92,11 @@ export const TodayRecommendationsPage = () => {
     setIsScanning(true);
     setScanMessage('Scanning 50 NSE Largecap stocks, auditing 20-day EMA support bounces & RSI momentum...');
     try {
-      await autoScrapeSwingSetups();
+      const res = await autoScrapeSwingSetups();
       setScanStatus(getDailySwingSyncStatus());
+      if (res && res.top5 && res.top5.length > 0) {
+        setLargecapPicks(res.top5);
+      }
       await refetch();
       setScanMessage('Daily Market Scan Complete! Top 5 highest-probability setups updated. ✅');
       setTimeout(() => setScanMessage(''), 4000);
@@ -95,7 +113,9 @@ export const TodayRecommendationsPage = () => {
     setScanMessage('🚀 Scanning 25 NSE Midcaps for Volume Shocks (>1.8x ADV) & 52-Week High Breakouts...');
     try {
       const results = await scanMidcapBreakouts();
-      setMidcapPicks(results);
+      if (results && results.length > 0) {
+        setMidcapPicks(results);
+      }
       setScanMessage('🚀 Midcap Breakout Scan Complete! Top 6 high-momentum setups updated. ✅');
       setTimeout(() => setScanMessage(''), 4000);
     } catch {
@@ -106,8 +126,13 @@ export const TodayRecommendationsPage = () => {
     }
   };
 
-  const safeRecs = Array.isArray(recommendations) ? recommendations : [];
-  const top5Picks = safeRecs.slice(0, 5);
+  const top5Picks = useMemo(() => {
+    if (largecapPicks && largecapPicks.length > 0) {
+      return largecapPicks.slice(0, 5);
+    }
+    const safeRecs = Array.isArray(recommendations) ? recommendations : [];
+    return safeRecs.slice(0, 5);
+  }, [largecapPicks, recommendations]);
 
   return (
     <Box>
@@ -322,7 +347,7 @@ export const TodayRecommendationsPage = () => {
                   const rankColor = rank === 1 ? '#f59e0b' : rank === 2 ? '#38bdf8' : '#818cf8';
 
                   return (
-                    <Grid item size={{ xs: 12, sm: 6, md: 4 }} key={midcap.id || symbol}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={midcap.id || symbol}>
                       <Card
                         sx={{
                           height: '100%',
@@ -532,7 +557,7 @@ export const TodayRecommendationsPage = () => {
                   const holdingTime = rec.expectedHolding || rec.holdingDays || '6 to 14 Days';
 
                   return (
-                    <Grid item size={{ xs: 12, sm: 6, md: 4 }} key={rec.id || symbol}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={rec.id || symbol}>
                       <Card
                         sx={{
                           height: '100%',

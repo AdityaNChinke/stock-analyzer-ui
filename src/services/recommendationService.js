@@ -99,6 +99,29 @@ export const getLiveRecommendations = async () => {
  * Fetch Top 5 Best Stocks for Swing Trading (100% Real Live Market Analysis)
  */
 export const getTop5SwingPicks = async () => {
+  // 1. Prioritize freshly scanned daily swing picks from localStorage
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('stock_analyzer_daily_swing_picks');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((r, i) => ({
+            ...r,
+            rank: i + 1,
+            rankBadge: `#${i + 1} Best Largecap Pick`,
+            upsidePercent: r.upsidePercent || (r.currentPrice > 0 ? `+${(((r.targetPrice - r.currentPrice) / r.currentPrice) * 100).toFixed(1)}%` : '+10.0%'),
+            downsidePercent: r.downsidePercent || (r.currentPrice > 0 ? `-${(((r.currentPrice - r.stopLoss) / r.currentPrice) * 100).toFixed(1)}%` : '-4.5%'),
+            setupType: r.setupPattern || r.setupType || 'EMA20 Pullback Support Bounce',
+            expectedHolding: r.holdingPeriod || r.expectedHolding || '6 to 12 Trading Days',
+          }));
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
   try {
     const top5 = await getTop5FromYF();
     if (top5 && top5.length > 0) {

@@ -550,23 +550,27 @@ export const getTop5SwingPicks = async () => {
     topUniverse.map(async (item, idx) => {
       const meta = NSE_STOCKS.find((s) => s.symbol === item.symbol) || { yfSymbol: `${item.symbol}.NS`, companyName: `${item.symbol} Ltd.`, basePrice: 1310, sector: 'Equities' };
       
-      let livePrice = meta.basePrice;
+      let history = [];
       try {
-        const yfData = await fetchYFChart(item.symbol);
-        if (yfData?.meta?.regularMarketPrice) {
-          livePrice = yfData.meta.regularMarketPrice;
-        } else if (yfData?.indicators?.quote?.[0]?.close) {
-          const closes = yfData.indicators.quote[0].close.filter((c) => c !== null && !isNaN(c));
-          if (closes.length) livePrice = closes[closes.length - 1];
+        const yfData = await fetchYFChart(item.symbol, '3mo', '1d');
+        if (yfData) {
+          history = parseYFHistory(yfData);
         }
       } catch {
-        // Fallback to meta basePrice
+        // Fallback
       }
 
-      const currentPrice = Number(livePrice.toFixed(2));
-      const targetPrice = Number((currentPrice * 1.10).toFixed(2));
-      const stopLoss = Number((currentPrice * 0.955).toFixed(2));
-      const breakevenTrigger = Number((currentPrice * 1.045).toFixed(2));
+      if (!history || history.length < 20) {
+        history = generateBaselinePrices(meta.basePrice, item.symbol);
+      }
+
+      const indicators = calculateTechnicalIndicators(history);
+      const currentPrice = indicators.currentPrice || meta.basePrice;
+      const targetPrice = indicators.targetPrice || Number((currentPrice * 1.085).toFixed(2));
+      const stopLoss = indicators.stopLoss || Number((currentPrice * 0.955).toFixed(2));
+      const upsidePercent = `+${(((targetPrice - currentPrice) / currentPrice) * 100).toFixed(1)}%`;
+      const downsidePercent = `-${(((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1)}%`;
+      const expectedHolding = indicators.expectedHolding || item.holding;
 
       return {
         id: item.symbol,
@@ -581,23 +585,19 @@ export const getTop5SwingPicks = async () => {
         currentPrice,
         targetPrice,
         stopLoss,
-        upsidePercent: '+10.0%',
-        downsidePercent: '-4.5%',
+        upsidePercent,
+        downsidePercent,
         setupType: item.setup,
-        expectedHolding: item.holding,
-        holdingDays: item.holding,
-        sellRules: {
-          targetExit: `Sell 70% to 100% position at Target ₹${targetPrice.toFixed(2)} (+10.0%)`,
-          stopLossExit: `Exit 100% immediately if daily close is below Stop Loss ₹${stopLoss.toFixed(2)} (-4.5%)`,
-          trailingRule: `Once stock reaches ₹${breakevenTrigger.toFixed(2)} (+4.5%), move Stop Loss to Entry (₹${currentPrice.toFixed(2)}) for a risk-free trade.`,
-          timeStop: `Exit if target not achieved within ${item.holding.split(' ')[2]} trading days.`,
-        },
+        expectedHolding,
+        holdingDays: expectedHolding,
+        holdingPeriod: expectedHolding,
+        sellRules: indicators.sellRules,
         reason: item.reason,
         rank: idx + 1,
         rankBadge: `#${idx + 1} Best Swing Pick`,
         createdAt: new Date().toISOString(),
         date: new Date().toISOString().split('T')[0],
-        riskRewardRatio: '2.22:1',
+        riskRewardRatio: `${(((targetPrice - currentPrice) / (currentPrice - stopLoss))).toFixed(2)}:1`,
       };
     })
   );
