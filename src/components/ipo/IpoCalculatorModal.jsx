@@ -24,6 +24,7 @@ import {
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { formatCurrency } from '../../utils/formatters';
+import { decodeEntities } from '../../services/ipoScraperScheduler';
 
 export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
   const [lots, setLots] = useState(1);
@@ -101,10 +102,10 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
         {/* Company & Price Summary */}
         <Box sx={{ mb: 2.5 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main' }}>
-            {ipo.companyName} ({ipo.symbol})
+            {decodeEntities(ipo.companyName)} ({ipo.symbol})
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Price Band: <strong>₹{upperPrice}</strong> • 1 Lot = <strong>{lotSize} Shares</strong> • Chittorgarh Range: <strong style={{ color: '#10b981' }}>{ipo.gmp?.range || `₹${ipo.gmp?.price || 0}`}</strong>
+            Price Band: <strong>{ipo.priceBand?.min && ipo.priceBand?.max && ipo.priceBand.min < ipo.priceBand.max ? `₹${ipo.priceBand.min}–₹${ipo.priceBand.max}` : `₹${upperPrice}`}</strong> • 1 Lot = <strong>{lotSize} Shares</strong> • Chittorgarh Range: <strong style={{ color: '#10b981' }}>{ipo.gmp?.range || `₹${ipo.gmp?.price || 0}`}</strong>
           </Typography>
         </Box>
 
@@ -125,7 +126,7 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
           </Box>
 
           <Grid container spacing={1.5} alignItems="center">
-            <Grid item size={{ xs: 7 }}>
+            <Grid size={{ xs: 7 }}>
               <Slider
                 value={Number(customGmp) || 0}
                 min={0}
@@ -135,7 +136,7 @@ export const IpoCalculatorModal = ({ open, onClose, ipo }) => {
                 sx={{ color: '#10b981' }}
               />
             </Grid>
-            <Grid item size={{ xs: 5 }}>
+            <Grid size={{ xs: 5 }}>
               <TextField
                 fullWidth
                 size="small"

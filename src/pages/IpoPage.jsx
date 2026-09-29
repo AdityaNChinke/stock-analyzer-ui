@@ -57,6 +57,7 @@ import {
   initWeeklyIpoScheduler,
   autoScrapeChittorgarh,
   getWeeklySyncStatus,
+  decodeEntities,
 } from '../services/ipoScraperScheduler';
 import { dispatchTradeAlert } from '../services/telegramService';
 import { formatCurrency, formatPercent } from '../utils/formatters';
@@ -489,7 +490,7 @@ export const IpoPage = () => {
                           }}
                           onClick={() => setSelectedIpo(ipo)}
                         >
-                          {ipo.companyName}
+                          {decodeEntities(ipo.companyName)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Symbol: <strong>{ipo.symbol}</strong> • Issue Size: <strong>₹{ipo.issueSizeCr?.toLocaleString()} Cr</strong>
@@ -532,7 +533,7 @@ export const IpoPage = () => {
                                 PRICE BAND
                               </Typography>
                               <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
-                                ₹{lowerPrice}–₹{upperPrice}
+                                {lowerPrice && upperPrice && lowerPrice < upperPrice ? `₹${lowerPrice}–₹${upperPrice}` : `₹${upperPrice}`}
                               </Typography>
                             </Box>
                           </Tooltip>

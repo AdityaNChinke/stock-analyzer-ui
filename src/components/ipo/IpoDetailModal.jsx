@@ -47,6 +47,7 @@ import {
   Legend,
 } from 'recharts';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
+import { decodeEntities } from '../../services/ipoScraperScheduler';
 
 export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTelegram }) => {
   const [activeTab, setActiveTab] = useState(0);
@@ -96,7 +97,7 @@ export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTel
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
             <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'JetBrains Mono, monospace', color: 'primary.main' }}>
-              {ipo.companyName}
+              {decodeEntities(ipo.companyName)}
             </Typography>
             <Chip
               label={ipo.issueType || 'Mainboard'}
@@ -202,7 +203,7 @@ export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTel
                       PRICE BAND
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'monospace', mt: 0.5 }}>
-                      ₹{lowerPrice} – ₹{upperPrice}
+                      {lowerPrice && upperPrice && lowerPrice < upperPrice ? `₹${lowerPrice} – ₹${upperPrice}` : `₹${upperPrice}`}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Per Share (₹)
@@ -379,11 +380,22 @@ export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTel
             )}
 
             {/* Official Restated Financials Table (Amount in ₹ Crore) */}
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
-              Company Financials (Restated Consolidated) — Amount in ₹ Crore
-            </Typography>
+            {(!ipo.financials || !ipo.financials.years || ipo.financials.years.length === 0) ? (
+              <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2, bgcolor: 'background.subtle' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.secondary', mb: 1 }}>
+                  Detailed 3-Year Financials Under RHP Verification
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Restated consolidated balance sheet and audited income statements will be updated upon final SEBI filing.
+                </Typography>
+              </Paper>
+            ) : (
+              <>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
+                  Company Financials (Restated Consolidated) — Amount in ₹ Crore
+                </Typography>
 
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
               <Table size="small">
                 <TableHead sx={{ bgcolor: 'background.subtle' }}>
                   <TableRow>
@@ -534,6 +546,8 @@ export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTel
                 </Tooltip>
               </Grid>
             </Grid>
+              </>
+            )}
           </Box>
         )}
 
@@ -552,7 +566,7 @@ export const IpoDetailModal = ({ open, onClose, ipo, onOpenCalculator, onSendTel
                 <Grid size={{ xs: 6 }}>
                   <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, textAlign: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                      {ipo.companyName} P/E
+                      {decodeEntities(ipo.companyName)} P/E
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'monospace', color: 'primary.main', my: 0.5 }}>
                       {ipo.valuation?.peRatio ? `${ipo.valuation.peRatio}x` : 'Loss Making'}
