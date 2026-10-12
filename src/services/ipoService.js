@@ -1242,7 +1242,8 @@ export const getEnrichedIpos = (customList = null) => {
       localStorage.removeItem('stock_analyzer_weekly_ipos');
       localStorage.removeItem('stock_analyzer_weekly_ipos_v2');
       localStorage.removeItem('stock_analyzer_weekly_ipos_v3');
-      const cached = localStorage.getItem('stock_analyzer_weekly_ipos_v4');
+      localStorage.removeItem('stock_analyzer_weekly_ipos_v4');
+      const cached = localStorage.getItem('stock_analyzer_weekly_ipos_v5');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {

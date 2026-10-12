@@ -8,7 +8,7 @@
 
 import { IPOS_DATA } from './ipoService.js';
 
-const STORAGE_KEY = 'stock_analyzer_weekly_ipos_v4';
+const STORAGE_KEY = 'stock_analyzer_weekly_ipos_v5';
 const LAST_SYNC_KEY = 'stock_analyzer_ipo_last_sync';
 
 const MONTH_MAP = {
@@ -328,16 +328,144 @@ const fetchWithTimeout = async (url, timeoutMs = 4500) => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
+ * Converts Chittorgarh date format like 'Oct 13, 2026' into ISO '2026-10-13'
+ */
+export function parseDateStrToIso(str) {
+  if (!str) return '';
+  const m = str.match(/([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})/);
+  if (!m) return '';
+  const month = MONTH_MAP[m[1].toLowerCase()] || '01';
+  const day = m[2].padStart(2, '0');
+  const year = m[3];
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parses full monthly Chittorgarh Calendar events from /calendar/ipo-calendar/1/
+ * Directly captures every company name, open date, close date, issue size, price band,
+ * and link to /ipo/<slug>/<id>/
+ */
+export function parseCalendarCandidates(html) {
+  const ipoMap = new Map();
+  if (!html) return [];
+  const liMatches = [...html.matchAll(/<li[^>]*class="mb-3"[^>]*>([\s\S]*?)<\/li>/gi)];
+
+  for (const match of liMatches) {
+    const li = match[1];
+
+    const titleMatch = li.match(/title="([^"]+?)\s+IPO\s+(Opens|Closes)\s+on\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})"/i);
+    const googleTextMatch = li.match(/text=([^&"]+)/i);
+
+    let compName = '';
+    let action = '';
+    let actionDateIso = '';
+
+    if (titleMatch) {
+      compName = titleMatch[1];
+      action = titleMatch[2].toLowerCase();
+      actionDateIso = parseDateStrToIso(titleMatch[3]);
+    } else if (googleTextMatch) {
+      try {
+        const decoded = decodeURIComponent(googleTextMatch[1]);
+        const m = decoded.match(/([^"]+?)\s+IPO\s+(Opens|Closes)\s+on\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/i);
+        if (m) {
+          compName = m[1];
+          action = m[2].toLowerCase();
+          actionDateIso = parseDateStrToIso(m[3]);
+        }
+      } catch {}
+    }
+
+    if (!compName) continue;
+
+    compName = compName
+      .replace(/&amp;/g, '&')
+      .replace(/&#x27;/g, "'")
+      .replace(/\s+(Ltd|Limited|Private Limited)$/i, '')
+      .replace(/\s+IPO$/i, '')
+      .trim();
+
+    if (!compName || compName.length < 3) continue;
+
+    const key = compName.toLowerCase();
+    const existing = ipoMap.get(key) || {
+      name: compName,
+      openDate: '',
+      closeDate: '',
+      rawDates: '',
+      priceBand: { min: 100, max: 100 },
+      issueSizeCr: 0,
+      description: '',
+      exchange: 'BSE, NSE',
+      href: '',
+    };
+
+    if (action === 'opens' && (!existing.openDate || actionDateIso < existing.openDate)) {
+      existing.openDate = actionDateIso;
+    }
+    if (action === 'closes' && (!existing.closeDate || actionDateIso > existing.closeDate)) {
+      existing.closeDate = actionDateIso;
+    }
+
+    // Convert /ipo_news/... to /ipo/...
+    const linkMatch = li.match(/href="([^"]*(?:chittorgarh\.com\/ipo_news|\/ipo_news)[^"]*)"/i);
+    if (linkMatch && !existing.href) {
+      const rawUrl = linkMatch[1].split('#')[0].replace('https://www.chittorgarh.com', '');
+      existing.href = rawUrl.replace('/ipo_news/', '/ipo/');
+    }
+
+    // Extract details from Google calendar description
+    const detailsMatch = li.match(/details=([^&"]+)/i);
+    if (detailsMatch) {
+      try {
+        const text = decodeURIComponent(detailsMatch[1]);
+
+        const dm = text.match(/opens on\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})\s+and closes(?: for subscription)? on\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/i);
+        if (dm) {
+          existing.openDate = parseDateStrToIso(dm[1]);
+          existing.closeDate = parseDateStrToIso(dm[2]);
+        }
+
+        const sizeMatch = text.match(/aggregating up to Rs\s*([0-9,.]+)\s*Crore/i);
+        if (sizeMatch) {
+          const val = parseFloat(sizeMatch[1].replace(/,/g, ''));
+          if (val > 0) existing.issueSizeCr = val;
+        }
+
+        const priceMatch = text.match(/Rs\s*(\d+)\s*-\s*Rs\s*(\d+)/i);
+        if (priceMatch) {
+          const p1 = parseInt(priceMatch[1], 10);
+          const p2 = parseInt(priceMatch[2], 10);
+          existing.priceBand = { min: Math.min(p1, p2), max: Math.max(p1, p2) };
+        }
+
+        const descMatch = text.match(/<p>(Incorporated in[\s\S]*?)<\/p>/i) ||
+                          text.match(/<p>([A-Za-z0-9\s&;.,'-]+?(?:is one of India's|is a|designs and manufactures|offers a)[\s\S]*?)<\/p>/i);
+        if (descMatch && descMatch[1].length > existing.description.length) {
+          existing.description = descMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+      } catch {}
+    }
+
+    ipoMap.set(key, existing);
+  }
+
+  return Array.from(ipoMap.values());
+}
+
+/**
  * Scrapes Chittorgarh IPO Calendar and runs institutional quantitative analysis
  * Dynamically fetches and analyzes active & upcoming IPOs for any active trading week
  */
 export const autoScrapeChittorgarh = async () => {
   const isBrowser = typeof window !== 'undefined';
   const urlsToTry = [
-    '/api-chittorgarh/ipo/',
-    `https://corsproxy.io/?url=${encodeURIComponent('https://www.chittorgarh.com/ipo/')}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://www.chittorgarh.com/ipo/')}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.chittorgarh.com/ipo/')}`,
+    '/api-chittorgarh/calendar/ipo-calendar/1/',
+    `https://corsproxy.io/?url=${encodeURIComponent('https://www.chittorgarh.com/calendar/ipo-calendar/1/')}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://www.chittorgarh.com/calendar/ipo-calendar/1/')}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.chittorgarh.com/calendar/ipo-calendar/1/')}`,
+    '/api-chittorgarh/calendar/ipo-calendar/',
+    '/api-chittorgarh/report/ipo-in-india-list-main-board-sme/82/mainboard/',
   ];
 
   let rawHtml = '';
@@ -347,16 +475,17 @@ export const autoScrapeChittorgarh = async () => {
       const response = await fetchWithTimeout(targetUrl, 5000);
       if (response.ok) {
         rawHtml = await response.text();
-        if (rawHtml && rawHtml.includes('<table')) break;
+        if (rawHtml && (rawHtml.includes('CalDate') || rawHtml.includes('<table'))) break;
       }
     } catch {
       // Continue to next mirror
     }
   }
 
-  let scrapedCandidates = [];
+  let scrapedCandidates = parseCalendarCandidates(rawHtml);
 
-  if (rawHtml && rawHtml.includes('<table')) {
+  // Fallback to table row parsing if calendar format was not present
+  if (scrapedCandidates.length === 0 && rawHtml && rawHtml.includes('<table')) {
     try {
       const tableMatch = rawHtml.match(/<table[^>]*>[\s\S]*?<\/table>/gi);
       if (tableMatch && tableMatch[0]) {
@@ -389,9 +518,9 @@ export const autoScrapeChittorgarh = async () => {
     // Filter candidates: only keep active (open today or closing today/later) or upcoming IPOs
     // Exclude IPOs whose bidding already closed prior to today!
     const activeCandidates = scrapedCandidates.filter((item) => {
-      const dates = parseChittorgarhDates(item.rawDates);
-      if (!dates) return true; // keep if dates pending to inspect detail page
-      const closeParts = dates.closeDate.split('-').map(Number);
+      const closeDateStr = item.closeDate || parseChittorgarhDates(item.rawDates)?.closeDate;
+      if (!closeDateStr) return true; // keep if dates pending to inspect detail page
+      const closeParts = closeDateStr.split('-').map(Number);
       const closeMs = new Date(closeParts[0], closeParts[1] - 1, closeParts[2]).getTime();
       return closeMs >= todayMs;
     });
@@ -405,18 +534,20 @@ export const autoScrapeChittorgarh = async () => {
       if (i > 0) await sleep(200); // 200ms spacing between requests
 
       try {
-        const detailUrl = `/api-chittorgarh${item.href}`;
+        const detailUrl = item.href ? `/api-chittorgarh${item.href}` : '';
         let dText = '';
-        try {
-          const dRes = await fetchWithTimeout(detailUrl, 4500);
-          if (dRes.ok) dText = await dRes.text();
-        } catch {
+        if (detailUrl) {
           try {
-            const mirrorUrl = `https://corsproxy.io/?url=${encodeURIComponent('https://www.chittorgarh.com' + item.href)}`;
-            const dRes = await fetchWithTimeout(mirrorUrl, 4500);
+            const dRes = await fetchWithTimeout(detailUrl, 4500);
             if (dRes.ok) dText = await dRes.text();
           } catch {
-            // detail fetch failed or timed out, will build candidate from list info
+            try {
+              const mirrorUrl = `https://corsproxy.io/?url=${encodeURIComponent('https://www.chittorgarh.com' + item.href)}`;
+              const dRes = await fetchWithTimeout(mirrorUrl, 4500);
+              if (dRes.ok) dText = await dRes.text();
+            } catch {
+              // detail fetch failed or timed out, will build candidate from list info
+            }
           }
         }
 
@@ -426,13 +557,13 @@ export const autoScrapeChittorgarh = async () => {
 
         const parsedDates = parseChittorgarhDates(t0['IPO Date']) || parseChittorgarhDates(item.rawDates);
         const todayStr = new Date().toISOString().split('T')[0];
-        const openDate = parsedDates?.openDate || todayStr;
-        const closeDate = parsedDates?.closeDate || todayStr;
+        const openDate = item.openDate || parsedDates?.openDate || todayStr;
+        const closeDate = item.closeDate || parsedDates?.closeDate || todayStr;
 
         // Accurate Price Band Parsing
         const priceBand = parsePriceBand(t0['Price Band'] || t0['Issue Price']);
-        const minPrice = priceBand.min;
-        const maxPrice = priceBand.max;
+        const minPrice = priceBand.min > 0 && priceBand.min !== 100 ? priceBand.min : (item.priceBand?.min || priceBand.min || 100);
+        const maxPrice = priceBand.max > 0 && priceBand.max !== 100 ? priceBand.max : (item.priceBand?.max || priceBand.max || 100);
 
         // Lot size
         let lotSize = 100;
@@ -440,13 +571,13 @@ export const autoScrapeChittorgarh = async () => {
         if (lotMatches) lotSize = parseInt(lotMatches[1], 10);
 
         // Issue size
-        let issueSizeCr = 500;
-        const isMatches = (t1['Total Issue Size'] || '').match(/₹\s*([0-9,]+)/i);
+        let issueSizeCr = item.issueSizeCr || 500;
+        const isMatches = (t1['Total Issue Size'] || '').match(/₹\s*([0-9,.]+)/i);
         if (isMatches) issueSizeCr = parseFloat(isMatches[1].replace(/,/g, ''));
 
         // Fresh issue vs OFS
         let freshIssueCr = Math.round(issueSizeCr * 0.75);
-        const fiMatches = (t1['Fresh Issue'] || '').match(/₹\s*([0-9,]+)/i);
+        const fiMatches = (t1['Fresh Issue'] || '').match(/₹\s*([0-9,.]+)/i);
         if (fiMatches) freshIssueCr = parseFloat(fiMatches[1].replace(/,/g, ''));
         const ofsCr = Math.max(0, issueSizeCr - freshIssueCr);
 
@@ -455,8 +586,8 @@ export const autoScrapeChittorgarh = async () => {
         const valuation = parseKpiAndValuation(tables, financials);
 
         // Symbol
-        const slug = item.href.split('/')[2] || 'IPO';
-        const symbol = slug.replace(/-ipo$/, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+        const slug = (item.href ? item.href.split('/')[2] : '') || item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const symbol = (slug || 'IPO').replace(/-ipo$/, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
 
         // Sector detection
         let sector = 'Diversified Manufacturing & Services';
