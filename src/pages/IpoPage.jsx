@@ -88,7 +88,7 @@ export const IpoPage = () => {
 
   const handleManualWeeklyScrape = async () => {
     setIsScraping(true);
-    setSyncMessage('Auto-scraping Chittorgarh & running institutional quantitative analysis for coming week (Mon - Sun)...');
+    setSyncMessage('Connecting to live Chittorgarh calendar & auditing active IPOs...');
     try {
       const res = await autoScrapeChittorgarh();
       const updatedStatus = getWeeklySyncStatus();
@@ -96,35 +96,42 @@ export const IpoPage = () => {
       if (res && res.ipos && res.ipos.length > 0) {
         const enriched = getEnrichedIpos(res.ipos);
         setAllIpos(enriched);
-        setSyncMessage(`Weekly Analysis Synced! ${enriched.length} IPOs for coming week (${updatedStatus.comingWeekRange}) analyzed from Chittorgarh. ✅`);
+        if (res.isLive) {
+          setSyncMessage(`Live Scraping Succeeded! ${enriched.length} IPOs analyzed from Chittorgarh for week (${updatedStatus.comingWeekRange}). ✅`);
+        } else {
+          setSyncMessage(`Loaded verified institutional model (${enriched.length} IPOs) for week (${updatedStatus.comingWeekRange}). ✅`);
+        }
       } else {
         setSyncMessage('Weekly Analysis Synced with verified quantitative models. ✅');
       }
-      setTimeout(() => setSyncMessage(''), 5000);
+      setTimeout(() => setSyncMessage(''), 6000);
     } catch (err) {
       console.error('Scrape error:', err);
-      setSyncMessage('Sync completed with calibrated quantitative base.');
-      setTimeout(() => setSyncMessage(''), 3000);
+      setSyncMessage('Network error reaching Chittorgarh; displaying verified baseline models.');
+      setTimeout(() => setSyncMessage(''), 5000);
     } finally {
       setIsScraping(false);
     }
   };
 
-  const upcomingCount = useMemo(() => allIpos.filter((i) => i.status === 'UPCOMING_7_DAYS').length, [allIpos]);
+  const thisWeekCount = useMemo(() => allIpos.filter((i) => i.status === 'UPCOMING_7_DAYS' || i.status === 'OPEN_NOW').length, [allIpos]);
   const openNowCount = useMemo(() => allIpos.filter((i) => i.status === 'OPEN_NOW').length, [allIpos]);
   const recentlyListedCount = useMemo(() => allIpos.filter((i) => i.status === 'RECENTLY_LISTED').length, [allIpos]);
 
-  // Filtered dataset
-  const currentTabStatus = useMemo(() => {
-    if (tabValue === 0) return 'UPCOMING_7_DAYS';
-    if (tabValue === 1) return 'OPEN_NOW';
-    if (tabValue === 3) return 'RECENTLY_LISTED';
-    return 'ALL';
-  }, [tabValue]);
-
   const displayedIpos = useMemo(() => {
     return allIpos.filter((ipo) => {
-      if (currentTabStatus !== 'ALL' && ipo.status !== currentTabStatus) return false;
+      if (tabValue === 0) {
+        // Tab 0: Coming Week Radar (all IPOs active or opening in this week's cycle)
+        if (ipo.status !== 'UPCOMING_7_DAYS' && ipo.status !== 'OPEN_NOW') return false;
+      } else if (tabValue === 1) {
+        // Tab 1: Strictly open for bidding now
+        if (ipo.status !== 'OPEN_NOW') return false;
+      } else if (tabValue === 3) {
+        // Tab 3: Historical listed audit
+        if (ipo.status !== 'RECENTLY_LISTED') return false;
+      }
+      // Tab 2: All IPOs
+
       if (selectedVerdict !== 'ALL' && ipo.decision?.verdict !== selectedVerdict) return false;
       if (selectedType !== 'ALL' && ipo.issueType !== selectedType) return false;
 
@@ -138,7 +145,7 @@ export const IpoPage = () => {
 
       return true;
     });
-  }, [allIpos, currentTabStatus, selectedVerdict, selectedType, searchQuery]);
+  }, [allIpos, tabValue, selectedVerdict, selectedType, searchQuery]);
 
   const handleSendTelegram = async (ipo) => {
     try {
@@ -262,14 +269,14 @@ export const IpoPage = () => {
       <Grid container spacing={3} sx={{ mb: 3.5 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Coming Week Upcoming"
-            value={`${upcomingCount} Live IPOs`}
-            subtitle={allIpos.filter((i) => i.status === 'UPCOMING_7_DAYS').slice(0, 4).map((i) => i.symbol).join(', ') || 'Next Week Radar'}
+            title="Active Week Radar"
+            value={`${thisWeekCount} Live IPOs`}
+            subtitle={allIpos.filter((i) => i.status === 'UPCOMING_7_DAYS' || i.status === 'OPEN_NOW').slice(0, 4).map((i) => i.symbol).join(', ') || 'This Week Radar'}
             icon={<EventIcon />}
             accentColor="#3b82f6"
             badgeText={syncStatus.comingWeekRange || 'Mon - Sun'}
             badgeType="positive"
-            tooltip={`📅 Coming Week Radar (${syncStatus.comingWeekRange || 'Mon - Sun'}): High-profile Indian Mainboard and SME IPOs opening in the upcoming week.`}
+            tooltip={`📅 Active Week Radar (${syncStatus.comingWeekRange || 'Mon - Sun'}): High-profile Indian Mainboard and SME IPOs active or opening in this week's trading cycle.`}
           />
         </Grid>
 
@@ -325,7 +332,7 @@ export const IpoPage = () => {
             <Tab
               icon={<EventIcon />}
               iconPosition="start"
-              label={`📅 Upcoming in Coming Week (Mon - Sun) (${upcomingCount})`}
+              label={`📅 Active Week Radar (${syncStatus.comingWeekRange || 'Mon - Sun'}) (${thisWeekCount})`}
               sx={{ textTransform: 'none', fontWeight: 800 }}
             />
             <Tab

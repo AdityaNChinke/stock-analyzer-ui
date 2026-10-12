@@ -5,6 +5,10 @@
       "destination": "https://query1.finance.yahoo.com/:path*"
     },
     {
+      "source": "/api-chittorgarh/:path*",
+      "destination": "https://www.chittorgarh.com/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

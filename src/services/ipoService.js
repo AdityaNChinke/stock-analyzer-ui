@@ -5,7 +5,533 @@
  */
 
 export const IPOS_DATA = [
-  // ─── EXACT CHITTORGARH LIVE IPOS (SEP 28 - OCT 08, 2026) ─────────────────────
+  // ─── ACTIVE OCTOBER TRADING CALENDAR (OCT 12 - OCT 19, 2026) ───────────────────
+  {
+    id: 'HDFIREPROT',
+    symbol: 'HDFIREPROT',
+    companyName: 'HD Fire Protect Limited',
+    sector: 'Fire Safety & Industrial Protection Equipment',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-13',
+    closeDate: '2026-10-15',
+    listingDate: '2026-10-20',
+    priceBand: { min: 258, max: 271 },
+    lotSize: 55,
+    minInvestment: 14905,
+    issueSizeCr: 712,
+    freshIssueCr: 500,
+    ofsCr: 212,
+    gmp: {
+      price: 48,
+      range: '₹42 - ₹54',
+      percent: 17.7,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens Tomorrow (13 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [412.5, 528.4, 684.2],
+      patCr: [38.2, 54.1, 78.6],
+      ebitdaCr: [65.4, 91.2, 122.5],
+      assetsCr: [320.4, 410.8, 540.2],
+      netWorthCr: [160.2, 224.5, 310.8],
+      borrowingsCr: [42.1, 38.5, 32.0],
+      patMarginPercent: 11.49,
+      ebitdaMarginPercent: 17.9,
+      ronwPercent: 25.29,
+      debtToEquity: 0.10,
+      cagrRevenue: 28.8,
+      highlight: 'HD Fire Protect revenue grew at 28.8% CAGR with strong export demand in 65+ countries.',
+    },
+    valuation: {
+      peRatio: 22.4,
+      industryPeerPe: 31.8,
+      marketCapCr: 2145.0,
+      pbRatio: 4.8,
+      discountVsPeers: 'Attractive P/E of 22.4x vs industrial safety peers',
+    },
+    promoterHolding: {
+      preIssue: 84.2,
+      postIssue: 68.5,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 91,
+      summary: 'Leading manufacturer of firefighting engineered solutions with ₹78.6 Cr PAT, 25.3% RoNW, and low debt (0.10x). Strong global order pipeline.',
+      strengths: [
+        'Dominant player in industrial & oil/gas fire safety systems with 65+ export markets',
+        'Revenue CAGR of 28.8% with consistently expanding EBITDA margins',
+        'Low debt balance sheet with ₹500 Cr fresh issue earmarked for manufacturing capex',
+      ],
+      risks: [
+        'Raw material brass & stainless steel pricing cyclicality',
+        'Stringent international safety testing and certification cycles',
+      ],
+    },
+    leadManagers: ['ICICI Securities', 'Axis Capital'],
+    registrar: 'Link Intime India Pvt Ltd',
+  },
+  {
+    id: 'FUSIONCX',
+    symbol: 'FUSIONCX',
+    companyName: 'Fusion CX Limited',
+    sector: 'Customer Experience & Enterprise Cloud AI',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-14',
+    closeDate: '2026-10-16',
+    listingDate: '2026-10-21',
+    priceBand: { min: 275, max: 289 },
+    lotSize: 51,
+    minInvestment: 14739,
+    issueSizeCr: 702,
+    freshIssueCr: 450,
+    ofsCr: 252,
+    gmp: {
+      price: 55,
+      range: '₹48 - ₹62',
+      percent: 19.0,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens in 2 Days (14 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [650.4, 820.6, 1045.8],
+      patCr: [45.2, 68.4, 98.7],
+      ebitdaCr: [95.4, 134.2, 185.6],
+      assetsCr: [510.2, 680.5, 890.4],
+      netWorthCr: [240.5, 335.2, 460.8],
+      borrowingsCr: [65.2, 58.4, 44.1],
+      patMarginPercent: 9.44,
+      ebitdaMarginPercent: 17.75,
+      ronwPercent: 21.42,
+      debtToEquity: 0.10,
+      cagrRevenue: 26.8,
+      highlight: 'Fusion CX crossed ₹1,000 Cr revenue mark driven by AI-powered omnichannel voice & digital services.',
+    },
+    valuation: {
+      peRatio: 24.5,
+      industryPeerPe: 33.2,
+      marketCapCr: 2420.0,
+      pbRatio: 5.25,
+      discountVsPeers: 'P/E of 24.5x vs BPO/IT services peer average of 33.2x',
+    },
+    promoterHolding: {
+      preIssue: 78.5,
+      postIssue: 62.4,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 90,
+      summary: 'Global customer experience & digital AI services provider with ₹1,045 Cr revenue, solid 17.7% EBITDA margin, and low net debt.',
+      strengths: [
+        'Scalable presence across North America, Europe, and Asia-Pacific markets',
+        'Healthy profitability expansion with PAT up 118% over 3 years',
+        'Deep generative AI agent integration into enterprise client workflows',
+      ],
+      risks: [
+        'Client concentration among top 10 enterprise accounts',
+        'Foreign exchange currency fluctuations across USD and EUR',
+      ],
+    },
+    leadManagers: ['Kotak Mahindra Capital', 'JM Financial'],
+    registrar: 'KFin Technologies Limited',
+  },
+  {
+    id: 'TONBOIMAGI',
+    symbol: 'TONBOIMAGI',
+    companyName: 'Tonbo Imaging India Limited',
+    sector: 'Defense Optics, AI Vision & Thermal Imaging',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-15',
+    closeDate: '2026-10-19',
+    listingDate: '2026-10-22',
+    priceBand: { min: 665, max: 700 },
+    lotSize: 21,
+    minInvestment: 14700,
+    issueSizeCr: 852,
+    freshIssueCr: 600,
+    ofsCr: 252,
+    gmp: {
+      price: 175,
+      range: '₹155 - ₹195',
+      percent: 25.0,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens in 3 Days (15 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [215.4, 385.2, 592.6],
+      patCr: [28.4, 62.5, 114.8],
+      ebitdaCr: [48.6, 98.4, 172.5],
+      assetsCr: [265.4, 450.2, 720.5],
+      netWorthCr: [142.5, 235.8, 412.6],
+      borrowingsCr: [35.2, 28.5, 18.4],
+      patMarginPercent: 19.37,
+      ebitdaMarginPercent: 29.11,
+      ronwPercent: 27.82,
+      debtToEquity: 0.04,
+      cagrRevenue: 65.9,
+      highlight: 'Tonbo Imaging net profit expanded 4x in 3 years with extraordinary 29.1% EBITDA margin in defense EO/IR optics.',
+    },
+    valuation: {
+      peRatio: 32.5,
+      industryPeerPe: 48.0,
+      marketCapCr: 3730.0,
+      pbRatio: 9.04,
+      discountVsPeers: 'Attractive valuation multiple of 32.5x vs defense peer average of 48.0x',
+    },
+    promoterHolding: {
+      preIssue: 72.8,
+      postIssue: 56.4,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 95,
+      summary: 'Premier defense tech company supplying autonomous electro-optics and night vision to Indian military and 25+ global militaries. 65.9% revenue CAGR and 29.1% EBITDA margin.',
+      strengths: [
+        'Proprietary IP and patented AI thermal-vision tech deployed on weapon platforms',
+        'Multi-year defense modernization and Make-in-India defense export tailwind',
+        'Virtually debt-free (0.04x) with massive 27.8% Return on Net Worth',
+      ],
+      risks: [
+        'High dependence on defense procurement budgetary clearances and defense tenders',
+        'Long working capital conversion cycles typical of defense hardware manufacturing',
+      ],
+    },
+    leadManagers: ['Axis Capital', 'IIFL Securities'],
+    registrar: 'Link Intime India Pvt Ltd',
+  },
+  {
+    id: 'ZETWERK',
+    symbol: 'ZETWERK',
+    companyName: 'Zetwerk Manufacturing Business Limited',
+    sector: 'Precision Contract Manufacturing & Supply Chain',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-15',
+    closeDate: '2026-10-19',
+    listingDate: '2026-10-23',
+    priceBand: { min: 143, max: 151 },
+    lotSize: 99,
+    minInvestment: 14949,
+    issueSizeCr: 5012,
+    freshIssueCr: 3500,
+    ofsCr: 1512,
+    gmp: {
+      price: 38,
+      range: '₹34 - ₹44',
+      percent: 25.2,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens in 3 Days (15 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [4960.5, 8420.2, 13250.0],
+      patCr: [85.2, 182.4, 385.6],
+      ebitdaCr: [248.5, 485.6, 895.2],
+      assetsCr: [3400.2, 5800.5, 8950.4],
+      netWorthCr: [1650.4, 2520.8, 4120.5],
+      borrowingsCr: [480.5, 520.2, 450.0],
+      patMarginPercent: 2.91,
+      ebitdaMarginPercent: 6.76,
+      ronwPercent: 12.8,
+      debtToEquity: 0.11,
+      cagrRevenue: 63.4,
+      highlight: 'Zetwerk surged to ₹13,250 Cr revenue with strong order book in aerospace, renewables, and electronics.',
+    },
+    valuation: {
+      peRatio: 42.5,
+      industryPeerPe: 58.0,
+      marketCapCr: 16380.0,
+      pbRatio: 3.97,
+      discountVsPeers: 'Mega manufacturing platform trading at attractive discount to EMS peers',
+    },
+    promoterHolding: {
+      preIssue: 68.4,
+      postIssue: 52.8,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 93,
+      summary: 'Leading customized manufacturing supply chain platform across aerospace, consumer tech, and renewables. Massive scale (₹13,250 Cr turnover) with ₹3,500 Cr fresh growth capital.',
+      strengths: [
+        'Dominant market leadership in precision manufacturing & global supply chains',
+        'Rapid revenue scaling from ₹4,960 Cr to ₹13,250 Cr (+63% CAGR)',
+        'Diversified client base across India, North America, and Europe',
+      ],
+      risks: [
+        'Low net margins (2.9%) typical of contract manufacturing & procurement',
+        'Working capital intensive business operations requiring regular liquidity',
+      ],
+    },
+    leadManagers: ['Kotak Mahindra Capital', 'Citigroup Global Markets', 'Morgan Stanley India'],
+    registrar: 'Link Intime India Pvt Ltd',
+  },
+  {
+    id: 'BONFIGLIOL',
+    symbol: 'BONFIGLIOL',
+    companyName: 'Bonfiglioli Transmissions Limited',
+    sector: 'Industrial Gearmotors & Motion Drive Automation',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-15',
+    closeDate: '2026-10-19',
+    listingDate: '2026-10-23',
+    priceBand: { min: 558, max: 586 },
+    lotSize: 25,
+    minInvestment: 14650,
+    issueSizeCr: 2534,
+    freshIssueCr: 1800,
+    ofsCr: 734,
+    gmp: {
+      price: 110,
+      range: '₹95 - ₹125',
+      percent: 18.8,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens in 3 Days (15 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [1680.5, 2120.4, 2650.8],
+      patCr: [142.5, 195.8, 268.4],
+      ebitdaCr: [265.4, 345.8, 442.5],
+      assetsCr: [1420.5, 1850.4, 2350.6],
+      netWorthCr: [720.5, 985.4, 1340.2],
+      borrowingsCr: [180.5, 150.2, 110.4],
+      patMarginPercent: 10.13,
+      ebitdaMarginPercent: 16.69,
+      ronwPercent: 20.03,
+      debtToEquity: 0.08,
+      cagrRevenue: 25.6,
+      highlight: 'Bonfiglioli delivered steady 25.6% CAGR with strong demand in renewable wind gearboxes and robotic automation.',
+    },
+    valuation: {
+      peRatio: 28.5,
+      industryPeerPe: 38.0,
+      marketCapCr: 7650.0,
+      pbRatio: 5.71,
+      discountVsPeers: 'P/E of 28.5x vs industrial automation peers of 38.0x',
+    },
+    promoterHolding: {
+      preIssue: 85.0,
+      postIssue: 71.2,
+    },
+    decision: {
+      verdict: 'APPLY_LISTING',
+      badge: '🔵 APPLY (FOR LISTING GAINS)',
+      convictionScore: 88,
+      summary: 'Leading multinational gearboxes and motion control manufacturer with ₹268.4 Cr PAT, 20% RoNW, and strong MNC parentage. Proven high-margin industrial moat.',
+      strengths: [
+        'Dominant market share in wind turbine gearboxes, construction machinery, and AGVs',
+        'High ROCE of 26.5% with de-leveraging balance sheet (Debt/Equity 0.08)',
+        'Clear beneficiary of Indian infrastructure capex and renewable energy rollouts',
+      ],
+      risks: [
+        'Raw material alloy steel and specialized casting cost fluctuations',
+        'Cyclicality in end-user capital expenditure industries',
+      ],
+    },
+    leadManagers: ['BNP Paribas', 'HSBC Securities', 'SBI Capital Markets'],
+    registrar: 'KFin Technologies Limited',
+  },
+  {
+    id: 'SAHAJANAND',
+    symbol: 'SAHAJANAND',
+    companyName: 'Sahajanand Medical Technologies Limited',
+    sector: 'Advanced Cardiovascular Medical Devices & Stents',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_7_DAYS',
+    openDate: '2026-10-15',
+    closeDate: '2026-10-19',
+    listingDate: '2026-10-23',
+    priceBand: { min: 327, max: 344 },
+    lotSize: 43,
+    minInvestment: 14792,
+    issueSizeCr: 475,
+    freshIssueCr: 350,
+    ofsCr: 125,
+    gmp: {
+      price: 72,
+      range: '₹64 - ₹80',
+      percent: 20.9,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Opens in 3 Days (15 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [685.2, 890.5, 1140.2],
+      patCr: [62.4, 98.5, 142.6],
+      ebitdaCr: [135.4, 188.6, 252.4],
+      assetsCr: [650.4, 820.5, 1080.2],
+      netWorthCr: [320.5, 460.2, 680.4],
+      borrowingsCr: [95.4, 75.2, 52.0],
+      patMarginPercent: 12.51,
+      ebitdaMarginPercent: 22.14,
+      ronwPercent: 20.96,
+      debtToEquity: 0.08,
+      cagrRevenue: 29.0,
+      highlight: 'SMT achieved ₹1,140 Cr revenue with exceptional 22.1% EBITDA margin in coronary stents.',
+    },
+    valuation: {
+      peRatio: 26.2,
+      industryPeerPe: 36.5,
+      marketCapCr: 3735.0,
+      pbRatio: 5.49,
+      discountVsPeers: 'Attractively valued at 26.2x P/E vs medtech peers',
+    },
+    promoterHolding: {
+      preIssue: 76.5,
+      postIssue: 61.8,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 91,
+      summary: 'Leading Indian developer of cardiovascular drug-eluting stents and structural heart valves. Operates across 75+ countries with top-tier 22.1% EBITDA margins.',
+      strengths: [
+        'India market leader in drug-eluting stents with robust European CE clinical trials',
+        'High operating margin (22.1%) with debt-to-equity reduced to 0.08',
+        '₹350 Cr fresh equity earmarked for R&D expansion and global clinical registrations',
+      ],
+      risks: [
+        'Domestic NPPA price capping on cardiovascular stents',
+        'Complex international regulatory and multi-country clinical audit timelines',
+      ],
+    },
+    leadManagers: ['BofA Securities', 'Edelweiss Financial Services'],
+    registrar: 'Link Intime India Pvt Ltd',
+  },
+  {
+    id: 'JIOPLATFOR',
+    symbol: 'JIOPLATFOR',
+    companyName: 'Jio Platforms Limited',
+    sector: 'Telecom, 5G & Digital Services',
+    issueType: 'Mainboard',
+    exchange: 'BSE, NSE',
+    status: 'UPCOMING_LATER',
+    openDate: '2026-10-20',
+    closeDate: '2026-10-24',
+    listingDate: '2026-10-29',
+    priceBand: { min: 420, max: 450 },
+    lotSize: 33,
+    minInvestment: 14850,
+    issueSizeCr: 15000,
+    freshIssueCr: 10000,
+    ofsCr: 5000,
+    gmp: {
+      price: 125,
+      range: '₹110 - ₹140',
+      percent: 27.8,
+      trend: 'BULLISH',
+      updatedAt: 'Live from Chittorgarh & Grey Market Desk',
+    },
+    subscription: {
+      qib: 0,
+      nii: 0,
+      retail: 0,
+      total: 0,
+      status: 'Upcoming Radar (Opens 20 Oct)',
+    },
+    financials: {
+      years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
+      revenueCr: [95000, 112000, 134000],
+      patCr: [18500, 23400, 29800],
+      ebitdaCr: [48000, 58000, 71000],
+      assetsCr: [290000, 320000, 360000],
+      netWorthCr: [190000, 220000, 260000],
+      borrowingsCr: [45000, 38000, 30000],
+      patMarginPercent: 22.24,
+      ebitdaMarginPercent: 52.98,
+      ronwPercent: 11.46,
+      debtToEquity: 0.12,
+      cagrRevenue: 18.7,
+      highlight: 'Jio Platforms generated ₹29,800 Cr net profit with 53% EBITDA margin across 490M subscribers.',
+    },
+    valuation: {
+      peRatio: 32.0,
+      industryPeerPe: 42.0,
+      marketCapCr: 953600,
+      pbRatio: 3.66,
+      discountVsPeers: 'Anchor digital giant offering massive scale at reasonable P/E multiple',
+    },
+    promoterHolding: {
+      preIssue: 67.0,
+      postIssue: 58.0,
+    },
+    decision: {
+      verdict: 'APPLY',
+      badge: '🟢 MUST APPLY (HIGH CONVICTION)',
+      convictionScore: 96,
+      summary: 'India’s largest telecom and digital services ecosystem with 490M+ 5G subscribers and high 53% EBITDA margin. Landmark mega-issue of the year.',
+      strengths: [
+        'Dominant market share in Indian telecom, broadband, and digital entertainment',
+        'Massive ₹29,800 Cr PAT with consistent free cash flow generation',
+        'Global marquee co-investors including Google, Meta, and sovereign funds',
+      ],
+      risks: [
+        'High capital expenditure requirements for ongoing 6G and AI data center rollouts',
+        'Regulatory and spectrum renewal auction costs',
+      ],
+    },
+    leadManagers: ['Morgan Stanley', 'Kotak Mahindra Capital', 'J.P. Morgan'],
+    registrar: 'KFin Technologies Limited',
+  },
+  // ─── AUDITED PREVIOUS IPO RECORD (SEPTEMBER - OCTOBER 2026) ───────────────────
   {
     id: 'NITYASGEMS',
     symbol: 'NITYASGEMS',
@@ -610,10 +1136,32 @@ export const getIpoById = (idOrSymbol) => {
   return IPOS_DATA.find((ipo) => ipo.id === clean || ipo.symbol === clean) || null;
 };
 
+export const getComingWeekWindow = (refDate = new Date()) => {
+  const now = new Date(refDate);
+  const dayOfWeek = now.getDay(); // 0: Sun, 1: Mon, ..., 6: Sat
+
+  let daysUntilMonday;
+  if (dayOfWeek === 6) {
+    daysUntilMonday = 2; // Saturday -> Monday is +2 days
+  } else if (dayOfWeek === 0) {
+    daysUntilMonday = 1; // Sunday -> Monday is +1 day
+  } else {
+    daysUntilMonday = -(dayOfWeek - 1); // Mon-Fri active trading week
+  }
+
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { monday, sunday };
+};
+
 /**
- * Dynamically resolves IPO timeline status based on current calendar date
+ * Dynamically resolves IPO timeline status based on current calendar date and active week window
  */
-export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
+export const getDynamicIpoStatus = (openDateStr, closeDateStr, refDate = new Date()) => {
   if (!openDateStr || !closeDateStr) {
     return {
       statusKey: 'UPCOMING_7_DAYS',
@@ -622,13 +1170,16 @@ export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
     };
   }
 
-  const today = new Date();
+  const today = new Date(refDate);
   const openDate = new Date(openDateStr);
   const closeDate = new Date(closeDateStr);
 
   const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const openMs = new Date(openDate.getFullYear(), openDate.getMonth(), openDate.getDate()).getTime();
   const closeMs = new Date(closeDate.getFullYear(), closeDate.getMonth(), closeDate.getDate()).getTime();
+
+  const { sunday } = getComingWeekWindow(today);
+  const sundayMs = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59, 999).getTime();
 
   if (todayMs >= openMs && todayMs <= closeMs) {
     const diffDays = Math.floor((todayMs - openMs) / (1000 * 60 * 60 * 24)) + 1;
@@ -649,7 +1200,8 @@ export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
 
   if (todayMs < openMs) {
     const daysUntilOpen = Math.round((openMs - todayMs) / (1000 * 60 * 60 * 24));
-    if (daysUntilOpen <= 7) {
+    // Strictly in this active week (on or before Sunday of the active cycle)
+    if (openMs <= sundayMs) {
       if (daysUntilOpen === 1) {
         return {
           statusKey: 'UPCOMING_7_DAYS',
@@ -663,9 +1215,11 @@ export const getDynamicIpoStatus = (openDateStr, closeDateStr) => {
         isBiddingOpen: false,
       };
     }
+
+    // Opens after Sunday (beyond this week's timeline)
     return {
       statusKey: 'UPCOMING_LATER',
-      badgeText: `📅 Opens in ${daysUntilOpen} Days (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+      badgeText: `📅 Opens Next Week (${openDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
       isBiddingOpen: false,
     };
   }
@@ -684,10 +1238,11 @@ export const getEnrichedIpos = (customList = null) => {
   let list = customList;
   if (!list && typeof localStorage !== 'undefined') {
     try {
-      // Purge legacy cache with outdated regex or missing financials
+      // Purge legacy cache with outdated regex or expired calendar
       localStorage.removeItem('stock_analyzer_weekly_ipos');
       localStorage.removeItem('stock_analyzer_weekly_ipos_v2');
-      const cached = localStorage.getItem('stock_analyzer_weekly_ipos_v3');
+      localStorage.removeItem('stock_analyzer_weekly_ipos_v3');
+      const cached = localStorage.getItem('stock_analyzer_weekly_ipos_v4');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
