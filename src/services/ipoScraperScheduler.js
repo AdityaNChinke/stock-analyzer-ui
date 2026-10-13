@@ -8,7 +8,7 @@
 
 import { IPOS_DATA } from './ipoService.js';
 
-const STORAGE_KEY = 'stock_analyzer_weekly_ipos_v5';
+const STORAGE_KEY = 'stock_analyzer_weekly_ipos_v6';
 const LAST_SYNC_KEY = 'stock_analyzer_ipo_last_sync';
 
 const MONTH_MAP = {
@@ -203,12 +203,12 @@ function parseFinancialsTable(tables) {
 
       for (const r of rows) {
         const cells = (r.match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || []).map((c) =>
-          decodeEntities(c.replace(/<[^>]+>/g, ' '))
+          decodeEntities(c.replace(/<[^>]+>/g, ' ')).trim()
         );
         if (cells.length > 1) {
           const key = cells[0].toLowerCase();
           if (key.includes('period ended')) {
-            headerYears = cells.slice(1);
+            headerYears = cells.slice(1).filter(Boolean);
           } else {
             rowMaps[key] = cells.slice(1).map((val) => {
               const num = parseFloat(val.replace(/,/g, ''));
@@ -219,25 +219,39 @@ function parseFinancialsTable(tables) {
       }
 
       if (headerYears.length > 0) {
-        // Reverse if newest first, so charts display chronologically (2024 -> 2025 -> 2026)
-        const isReversed = headerYears[0].includes('2026') && headerYears[headerYears.length - 1].includes('2024');
-        const years = isReversed ? [...headerYears].reverse() : headerYears;
-        const rev = rowMaps['total income'] || rowMaps['revenue'] || [];
-        const pat = rowMaps['profit after tax'] || [];
-        const ebitda = rowMaps['ebitda'] || [];
-        const assets = rowMaps['assets'] || [];
-        const netWorth = rowMaps['net worth'] || [];
-        const borrowings = rowMaps['total borrowing'] || [];
-
-        return {
-          years,
-          revenueCr: isReversed ? [...rev].reverse() : rev,
-          patCr: isReversed ? [...pat].reverse() : pat,
-          ebitdaCr: isReversed ? [...ebitda].reverse() : ebitda,
-          assetsCr: isReversed ? [...assets].reverse() : assets,
-          netWorthCr: isReversed ? [...netWorth].reverse() : netWorth,
-          borrowingsCr: isReversed ? [...borrowings].reverse() : borrowings,
+        // Robust chronological check: compare 4-digit years
+        const extractYear = (s) => {
+          const m = String(s).match(/\b(20\d\d)\b/);
+          return m ? parseInt(m[1], 10) : 0;
         };
+        const firstY = extractYear(headerYears[0] || '');
+        const lastY = extractYear(headerYears[headerYears.length - 1] || '');
+        const isReversed = firstY > lastY || (firstY === lastY && (headerYears[0].includes('Jun') || headerYears[0].includes('Sep') || headerYears[0].includes('Dec')));
+
+        const findRow = (pattern) => {
+          const matchKey = Object.keys(rowMaps).find((k) => k.includes(pattern));
+          return matchKey ? rowMaps[matchKey] : [];
+        };
+
+        const years = isReversed ? [...headerYears].reverse() : headerYears;
+        const rev = findRow('total income') || findRow('revenue') || [];
+        const pat = findRow('profit after tax') || findRow('pat') || [];
+        const ebitda = findRow('ebitda') || [];
+        const assets = findRow('assets') || [];
+        const netWorth = findRow('net worth') || [];
+        const borrowings = findRow('borrowing') || [];
+
+        if (rev.length > 0 || pat.length > 0) {
+          return {
+            years,
+            revenueCr: isReversed ? [...rev].reverse() : rev,
+            patCr: isReversed ? [...pat].reverse() : pat,
+            ebitdaCr: isReversed ? [...ebitda].reverse() : ebitda,
+            assetsCr: isReversed ? [...assets].reverse() : assets,
+            netWorthCr: isReversed ? [...netWorth].reverse() : netWorth,
+            borrowingsCr: isReversed ? [...borrowings].reverse() : borrowings,
+          };
+        }
       }
     }
   }
@@ -262,7 +276,7 @@ function parseKpiAndValuation(tables, fin) {
       const rows = tableHtml.match(/<tr[\s\S]*?<\/tr>/gi) || [];
       for (const r of rows) {
         const cells = (r.match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || []).map((c) =>
-          decodeEntities(c.replace(/<[^>]+>/g, ' '))
+          decodeEntities(c.replace(/<[^>]+>/g, ' ')).trim()
         );
         if (cells.length >= 2) {
           const key = cells[0].toLowerCase();
@@ -675,25 +689,8 @@ export const autoScrapeChittorgarh = async () => {
             total: 0,
             status: `Opens on ${openDate}`,
           },
-          financials: financials || {
-            years: ['31 Mar 2024', '31 Mar 2025', '31 Mar 2026'],
-            revenueCr: [Math.round(issueSizeCr * 0.8), Math.round(issueSizeCr * 1.2), Math.round(issueSizeCr * 1.8)],
-            patCr: [Math.round(issueSizeCr * 0.08), Math.round(issueSizeCr * 0.12), Math.round(issueSizeCr * 0.18)],
-            ebitdaCr: [Math.round(issueSizeCr * 0.15), Math.round(issueSizeCr * 0.22), Math.round(issueSizeCr * 0.30)],
-            assetsCr: [Math.round(issueSizeCr * 1.1), Math.round(issueSizeCr * 1.4), Math.round(issueSizeCr * 1.9)],
-            netWorthCr: [Math.round(issueSizeCr * 0.4), Math.round(issueSizeCr * 0.6), Math.round(issueSizeCr * 0.9)],
-            borrowingsCr: [Math.round(issueSizeCr * 0.1), Math.round(issueSizeCr * 0.15), Math.round(issueSizeCr * 0.12)],
-          },
-          valuation: valuation || {
-            peRatio: 21.5,
-            industryPeerPe: 28.5,
-            marketCapCr: Math.round(issueSizeCr * 3.5),
-            pbRatio: 4.2,
-            ronwPercent: 28.5,
-            patMarginPercent: 12.0,
-            ebitdaMarginPercent: 18.0,
-            debtToEquity: 0.35,
-          },
+          financials: financials || null,
+          valuation: (valuation && valuation.peRatio) ? valuation : null,
           decision: {
             verdict,
             badge,
